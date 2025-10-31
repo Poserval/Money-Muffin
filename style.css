@@ -19,8 +19,50 @@ body {
 }
 
 .header {
+    background: white;
+    padding: 0;
+    color: #1d1d1f;
+    border-radius: 0;
+    box-shadow: none;
+    position: relative;
+    overflow: hidden;
+}
+
+.app-header {
+    background: white;
+    padding: 20px 16px;
+    border-bottom: 1px solid #e5e5e7;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.app-title {
+    font-size: 32px;
+    font-weight: 800;
+    margin: 0;
+    text-align: center;
+    color: #1d1d1f;
+    text-shadow: 
+        2px 2px 0px #fff,
+        3px 3px 0px rgba(0, 0, 0, 0.1),
+        4px 4px 4px rgba(0, 0, 0, 0.1);
+    letter-spacing: -0.5px;
+    position: relative;
+    display: inline-block;
+}
+
+.app-title::after {
+    content: '💰';
+    font-size: 24px;
+    margin-left: 8px;
+    text-shadow: none;
+    position: relative;
+    top: -2px;
+}
+
+.total-balance-section {
     background: linear-gradient(135deg, #007AFF 0%, #0056CC 100%);
-    padding: 30px 20px 20px 20px;
+    padding: 25px 20px;
     color: white;
     border-radius: 0 0 20px 20px;
     box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
@@ -28,7 +70,7 @@ body {
     overflow: hidden;
 }
 
-.header::before {
+.total-balance-section::before {
     content: '';
     position: absolute;
     top: 0;
@@ -36,14 +78,6 @@ body {
     right: 0;
     height: 6px;
     background: linear-gradient(135deg, #0056CC 0%, #007AFF 50%, #0056CC 100%);
-}
-
-.app-title {
-    font-size: 28px;
-    font-weight: 700;
-    margin-bottom: 20px;
-    text-align: center;
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .total-balance {
@@ -58,7 +92,7 @@ body {
 }
 
 .balance-amount {
-    font-size: 32px;
+    font-size: 36px;
     font-weight: 700;
     margin-bottom: 6px;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
@@ -421,7 +455,7 @@ body {
         box-shadow: none;
     }
     
-    .header {
+    .total-balance-section {
         border-radius: 0;
     }
     
