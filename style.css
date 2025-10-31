@@ -170,13 +170,11 @@ body {
 .wallet-item {
     background: white;
     border-radius: 12px;
-    padding: 10px;
+    padding: 12px;
     border: 1px solid #e5e5e7;
     position: relative;
     min-height: 90px;
     display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
     cursor: pointer;
@@ -203,7 +201,6 @@ body {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    min-height: 70px;
 }
 
 .wallet-name {
@@ -232,26 +229,24 @@ body {
 .wallet-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 3px;
-    width: 36px;
-    margin-left: 6px;
+    gap: 4px;
+    margin-left: 8px;
+    width: 40px;
 }
 
 .wallet-action-btn {
     background: none;
     border: none;
-    padding: 3px;
-    border-radius: 3px;
+    padding: 4px;
+    border-radius: 4px;
     cursor: pointer;
     color: #86868b;
     transition: all 0.2s ease;
-    font-size: 10px;
+    font-size: 12px;
     display: flex;
     align-items: center;
     justify-content: center;
     aspect-ratio: 1;
-    min-width: 14px;
-    min-height: 14px;
 }
 
 .wallet-action-btn:hover {
