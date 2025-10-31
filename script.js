@@ -233,8 +233,6 @@ function handleAddWallet(e) {
     };
 
     wallets.push(newWallet);
-    saveWallets();
-    renderWallets();
     
     // Вычисляем новый баланс ПОСЛЕ добавления кошелька
     const newTotalBalance = wallets
@@ -248,6 +246,8 @@ function handleAddWallet(e) {
     // Показываем изменение только если оно не равно нулю
     showBalanceChange = lastBalanceChange !== 0;
     
+    saveWallets();
+    renderWallets();
     updateTotalBalance();
     
     addWalletModal.classList.remove('active');
@@ -381,8 +381,6 @@ function deleteWallet(walletId) {
             .reduce((sum, wallet) => sum + wallet.amount, 0);
 
         wallets = wallets.filter(wallet => wallet.id !== walletId);
-        saveWallets();
-        renderWallets();
         
         const newTotalBalance = wallets
             .filter(wallet => wallet.currency === 'RUB')
@@ -395,6 +393,8 @@ function deleteWallet(walletId) {
         // Показываем изменение только если оно не равно нулю
         showBalanceChange = lastBalanceChange !== 0;
         
+        saveWallets();
+        renderWallets();
         updateTotalBalance();
     }
 }
@@ -435,9 +435,6 @@ function editWallet(walletId) {
         wallet.type = document.getElementById('walletType').value;
         wallet.color = getSelectedColor();
         wallet.lastUpdate = new Date().toISOString().split('T')[0];
-
-        saveWallets();
-        renderWallets();
         
         const newTotalBalance = wallets
             .filter(wallet => wallet.currency === 'RUB')
@@ -450,6 +447,8 @@ function editWallet(walletId) {
         // Показываем изменение только если оно не равно нулю
         showBalanceChange = lastBalanceChange !== 0;
         
+        saveWallets();
+        renderWallets();
         updateTotalBalance();
         
         addWalletModal.classList.remove('active');
@@ -474,8 +473,6 @@ function copyWallet(walletId) {
             pinned: false
         };
         wallets.push(copiedWallet);
-        saveWallets();
-        renderWallets();
         
         const newTotalBalance = wallets
             .filter(wallet => wallet.currency === 'RUB')
@@ -488,6 +485,8 @@ function copyWallet(walletId) {
         // Показываем изменение только если оно не равно нулю
         showBalanceChange = lastBalanceChange !== 0;
         
+        saveWallets();
+        renderWallets();
         updateTotalBalance();
     }
 }
