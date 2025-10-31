@@ -9,6 +9,8 @@ const addWalletModal = document.getElementById('addWalletModal');
 const cancelBtn = document.getElementById('cancelBtn');
 const walletForm = document.getElementById('walletForm');
 const sortButtons = document.querySelectorAll('.sort-btn');
+const totalBalanceElement = document.getElementById('totalBalance');
+const balanceChangeElement = document.getElementById('balanceChange');
 
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', function() {
@@ -179,18 +181,18 @@ function createCurrencySection(currency, wallets) {
 // Создание элемента кошелька
 function createWalletElement(wallet) {
     const walletDiv = document.createElement('div');
-    walletDiv.className = 'wallet-card';
+    walletDiv.className = 'wallet-item';
 
     const amountClass = wallet.amount >= 0 ? 'positive' : 'negative';
     const amountFormatted = formatAmount(wallet.amount, wallet.currency);
     const dateFormatted = formatDate(wallet.lastUpdate);
 
     walletDiv.innerHTML = `
-        <div class="wallet-header">
+        <div class="wallet-info">
             <div class="wallet-name">${wallet.name}</div>
-            <div class="wallet-amount ${amountClass}">${amountFormatted}</div>
+            <div class="wallet-date">Изм: ${dateFormatted}</div>
         </div>
-        <div class="wallet-date">Изм: ${dateFormatted}</div>
+        <div class="wallet-amount ${amountClass}">${amountFormatted}</div>
     `;
 
     return walletDiv;
@@ -202,8 +204,12 @@ function updateTotalBalance() {
         .filter(wallet => wallet.currency === 'RUB')
         .reduce((sum, wallet) => sum + wallet.amount, 0);
 
-    const totalElement = document.getElementById('totalBalance');
-    totalElement.textContent = formatAmount(total, 'RUB');
+    totalBalanceElement.textContent = formatAmount(total, 'RUB');
+    
+    // Для простоты показываем статичное изменение
+    // В будущем можно добавить расчет изменений
+    balanceChangeElement.textContent = '-13 767 ₽';
+    balanceChangeElement.className = 'balance-change negative';
 }
 
 // Вспомогательные функции
@@ -227,4 +233,3 @@ function formatDate(dateString) {
     const date = new Date(dateString);
     return date.toLocaleDateString('ru-RU');
 }
-
