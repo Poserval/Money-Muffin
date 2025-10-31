@@ -5,8 +5,7 @@ let currentSort = 'amount';
 // Цвета радуги + черный и серый
 const walletColors = [
     '#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF', '#5856D6',
-    '#FF2D55', '#AF52DE', '#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA',
-    '#007AFF', '#5856D6', '#1D1D1F', '#8E8E93'
+    '#FF2D55', '#AF52DE', '#8E8E93'
 ];
 
 // DOM элементы
@@ -86,9 +85,9 @@ const initialWallets = [
 ];
 
 // Переменные для хранения данных о балансе
-let previousTotalBalance = 1025240; // Начальное значение как на картинке
-let lastBalanceChange = -13767; // Начальное значение изменения
-let showBalanceChange = true; // Флаг для отображения изменения баланса
+let previousTotalBalance = 1025240;
+let lastBalanceChange = -13767;
+let showBalanceChange = true;
 
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', function() {
@@ -181,7 +180,6 @@ function saveWallets() {
 function setupEventListeners() {
     addWalletBtn.addEventListener('click', () => {
         addWalletModal.classList.add('active');
-        // Возвращаем стандартный обработчик для добавления
         walletForm.onsubmit = handleAddWallet;
     });
 
@@ -190,7 +188,12 @@ function setupEventListeners() {
         walletForm.reset();
     });
 
-    walletForm.addEventListener('submit', handleAddWallet);
+    walletForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        if (walletForm.onsubmit) {
+            walletForm.onsubmit(e);
+        }
+    });
 
     sortButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -226,8 +229,8 @@ function handleAddWallet(e) {
     const type = document.getElementById('walletType').value;
     const color = getSelectedColor();
 
-    // Валидация суммы
-    if (!amountInput.trim()) {
+    // Простая валидация
+    if (amountInput.trim() === '') {
         alert('Пожалуйста, введите сумму');
         return false;
     }
@@ -275,7 +278,6 @@ function handleAddWallet(e) {
     addWalletModal.classList.remove('active');
     walletForm.reset();
     
-    // Показываем сообщение об успешном создании
     alert('Кошелек создан');
     
     return false;
@@ -447,7 +449,7 @@ function editWallet(walletId) {
     // Показываем модальное окно
     addWalletModal.classList.add('active');
 
-    // Удаляем старый обработчик и добавляем новый для редактирования
+    // Устанавливаем обработчик для редактирования
     walletForm.onsubmit = function(e) {
         e.preventDefault();
         
@@ -457,8 +459,8 @@ function editWallet(walletId) {
         const type = document.getElementById('walletType').value;
         const color = getSelectedColor();
 
-        // Валидация суммы
-        if (!amountInput.trim()) {
+        // Простая валидация
+        if (amountInput.trim() === '') {
             alert('Пожалуйста, введите сумму');
             return false;
         }
@@ -499,7 +501,6 @@ function editWallet(walletId) {
         addWalletModal.classList.remove('active');
         walletForm.reset();
         
-        // Показываем сообщение об успешном редактировании
         alert('Изменения внесены');
         
         // Возвращаем стандартный обработчик
