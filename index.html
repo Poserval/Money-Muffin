@@ -15,12 +15,13 @@
             
             <div class="total-balance-section">
                 <div class="total-balance">
-                    <div class="balance-left">
-                        <div class="balance-label">Общий баланс</div>
-                    </div>
-                    <div class="balance-center">
+                    <div class="balance-label">Общий баланс</div>
+                    <div class="balance-right">
                         <div class="balance-amount" id="totalBalance">1 025 240 ₽</div>
-                        <div class="balance-change negative" id="balanceChange">-13 767 ₽</div>
+                        <div class="balance-change-container">
+                            <div class="balance-change" id="balanceChange">-13 767 ₽</div>
+                            <button class="reset-change-btn" id="resetChangeBtn" title="Сбросить изменение">↺</button>
+                        </div>
                     </div>
                 </div>
             </div>
