@@ -84,9 +84,8 @@ const initialWallets = [
     }
 ];
 
-// Переменная для отслеживания режима редактирования
-let isEditing = false;
-let editingWalletId = null;
+// Переменная для хранения предыдущего баланса
+let previousTotalBalance = 1025240; // Начальное значение как на картинке
 
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', function() {
@@ -134,6 +133,11 @@ function getSelectedColor() {
 function loadWallets() {
     try {
         const savedWallets = localStorage.getItem('moneyMuffinWallets');
+        const savedPreviousBalance = localStorage.getItem('moneyMuffinPreviousBalance');
+        
+        if (savedPreviousBalance) {
+            previousTotalBalance = parseFloat(savedPreviousBalance);
+        }
         
         if (savedWallets && JSON.parse(savedWallets).length > 0) {
             wallets = JSON.parse(savedWallets);
@@ -155,26 +159,23 @@ function loadWallets() {
 // Сохранение данных в LocalStorage
 function saveWallets() {
     localStorage.setItem('moneyMuffinWallets', JSON.stringify(wallets));
+    localStorage.setItem('moneyMuffinPreviousBalance', previousTotalBalance.toString());
 }
 
 // Настройка обработчиков событий
 function setupEventListeners() {
     addWalletBtn.addEventListener('click', () => {
-        isEditing = false;
-        editingWalletId = null;
         addWalletModal.classList.add('active');
-        walletForm.reset();
-        document.querySelector('.modal-header h3').textContent = 'Добавить кошелек';
+        // Возвращаем стандартный обработчик для добавления
+        walletForm.onsubmit = handleAddWallet;
     });
 
     cancelBtn.addEventListener('click', () => {
         addWalletModal.classList.remove('active');
         walletForm.reset();
-        isEditing = false;
-        editingWalletId = null;
     });
 
-    walletForm.addEventListener('submit', handleWalletSubmit);
+    walletForm.addEventListener('submit', handleAddWallet);
 
     sortButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -187,14 +188,12 @@ function setupEventListeners() {
         if (e.target === addWalletModal) {
             addWalletModal.classList.remove('active');
             walletForm.reset();
-            isEditing = false;
-            editingWalletId = null;
         }
     });
 }
 
-// Обработка отправки формы (универсальная)
-function handleWalletSubmit(e) {
+// Обработка добавления кошелька
+function handleAddWallet(e) {
     e.preventDefault();
     
     const name = document.getElementById('walletName').value;
@@ -203,40 +202,24 @@ function handleWalletSubmit(e) {
     const type = document.getElementById('walletType').value;
     const color = getSelectedColor();
 
-    if (isEditing && editingWalletId) {
-        // Режим редактирования
-        const walletIndex = wallets.findIndex(w => w.id === editingWalletId);
-        if (walletIndex !== -1) {
-            wallets[walletIndex].name = name;
-            wallets[walletIndex].amount = amount;
-            wallets[walletIndex].currency = currency;
-            wallets[walletIndex].type = type;
-            wallets[walletIndex].color = color;
-            wallets[walletIndex].lastUpdate = new Date().toISOString().split('T')[0];
-        }
-    } else {
-        // Режим добавления
-        const newWallet = {
-            id: Date.now(),
-            name: name,
-            amount: amount,
-            currency: currency,
-            type: type,
-            color: color,
-            lastUpdate: new Date().toISOString().split('T')[0],
-            pinned: false
-        };
-        wallets.push(newWallet);
-    }
+    const newWallet = {
+        id: Date.now(),
+        name: name,
+        amount: amount,
+        currency: currency,
+        type: type,
+        color: color,
+        lastUpdate: new Date().toISOString().split('T')[0],
+        pinned: false
+    };
 
+    wallets.push(newWallet);
     saveWallets();
     renderWallets();
     updateTotalBalance();
     
     addWalletModal.classList.remove('active');
     walletForm.reset();
-    isEditing = false;
-    editingWalletId = null;
 }
 
 // Установка сортировки
@@ -372,10 +355,6 @@ function editWallet(walletId) {
     const wallet = wallets.find(w => w.id === walletId);
     if (!wallet) return;
 
-    // Устанавливаем режим редактирования
-    isEditing = true;
-    editingWalletId = walletId;
-
     // Заполняем форму данными кошелька
     document.getElementById('walletName').value = wallet.name;
     document.getElementById('walletAmount').value = wallet.amount;
@@ -390,11 +369,31 @@ function editWallet(walletId) {
         }
     });
 
-    // Меняем заголовок модального окна
-    document.querySelector('.modal-header h3').textContent = 'Редактировать кошелек';
-
     // Показываем модальное окно
     addWalletModal.classList.add('active');
+
+    // Удаляем старый обработчик и добавляем новый для редактирования
+    walletForm.onsubmit = function(e) {
+        e.preventDefault();
+        
+        // Обновляем данные кошелька
+        wallet.name = document.getElementById('walletName').value;
+        wallet.amount = parseFloat(document.getElementById('walletAmount').value);
+        wallet.currency = document.getElementById('walletCurrency').value;
+        wallet.type = document.getElementById('walletType').value;
+        wallet.color = getSelectedColor();
+        wallet.lastUpdate = new Date().toISOString().split('T')[0];
+
+        saveWallets();
+        renderWallets();
+        updateTotalBalance();
+        
+        addWalletModal.classList.remove('active');
+        walletForm.reset();
+        
+        // Возвращаем стандартный обработчик
+        walletForm.onsubmit = handleAddWallet;
+    };
 }
 
 function copyWallet(walletId) {
@@ -429,9 +428,30 @@ function updateTotalBalance() {
         .filter(wallet => wallet.currency === 'RUB')
         .reduce((sum, wallet) => sum + wallet.amount, 0);
 
+    // Вычисляем разницу
+    const balanceChange = totalRub - previousTotalBalance;
+    
+    // Обновляем отображение
     totalBalanceElement.textContent = formatAmount(totalRub, 'RUB');
-    balanceChangeElement.textContent = '-13 767 ₽';
-    balanceChangeElement.className = 'balance-change negative';
+    
+    // Форматируем изменение баланса
+    let changeText = '';
+    if (balanceChange > 0) {
+        changeText = `+${formatAmount(balanceChange, 'RUB')}`;
+        balanceChangeElement.className = 'balance-change positive';
+    } else if (balanceChange < 0) {
+        changeText = `${formatAmount(balanceChange, 'RUB')}`;
+        balanceChangeElement.className = 'balance-change negative';
+    } else {
+        changeText = `${formatAmount(0, 'RUB')}`;
+        balanceChangeElement.className = 'balance-change neutral';
+    }
+    
+    balanceChangeElement.textContent = changeText;
+    
+    // Сохраняем текущий баланс как предыдущий для следующего расчета
+    previousTotalBalance = totalRub;
+    saveWallets();
 }
 
 // Вспомогательные функции
