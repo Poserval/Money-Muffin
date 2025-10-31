@@ -206,7 +206,6 @@ function setupEventListeners() {
         }
     });
 
-    // Обработчик для кнопки сброса
     resetChangeBtn.addEventListener('click', resetBalanceChange);
 }
 
@@ -227,7 +226,12 @@ function handleAddWallet(e) {
     const type = document.getElementById('walletType').value;
     const color = getSelectedColor();
 
-    // Проверяем, что сумма - валидное число
+    // Валидация суммы
+    if (!amountInput.trim()) {
+        alert('Пожалуйста, введите сумму');
+        return;
+    }
+
     const amount = parseFloat(amountInput);
     if (isNaN(amount)) {
         alert('Пожалуйста, введите корректную сумму');
@@ -439,33 +443,37 @@ function editWallet(walletId) {
     addWalletModal.classList.add('active');
 
     // Удаляем старый обработчик и добавляем новый для редактирования
-    const editFormHandler = function(e) {
+    walletForm.onsubmit = function(e) {
         e.preventDefault();
         
+        const name = document.getElementById('walletName').value;
+        const amountInput = document.getElementById('walletAmount').value;
+        const currency = document.getElementById('walletCurrency').value;
+        const type = document.getElementById('walletType').value;
+        const color = getSelectedColor();
+
+        // Валидация суммы
+        if (!amountInput.trim()) {
+            alert('Пожалуйста, введите сумму');
+            return;
+        }
+
+        const amount = parseFloat(amountInput);
+        if (isNaN(amount)) {
+            alert('Пожалуйста, введите корректную сумму');
+            return;
+        }
+
         const oldTotalBalance = wallets
             .filter(wallet => wallet.currency === 'RUB')
             .reduce((sum, wallet) => sum + wallet.amount, 0);
         
-        // Получаем новые значения из формы
-        const newName = document.getElementById('walletName').value;
-        const newAmountInput = document.getElementById('walletAmount').value;
-        const newCurrency = document.getElementById('walletCurrency').value;
-        const newType = document.getElementById('walletType').value;
-        const newColor = getSelectedColor();
-
-        // Проверяем, что сумма - валидное число
-        const newAmount = parseFloat(newAmountInput);
-        if (isNaN(newAmount)) {
-            alert('Пожалуйста, введите корректную сумму');
-            return;
-        }
-        
         // Обновляем данные кошелька
-        wallet.name = newName;
-        wallet.amount = newAmount;
-        wallet.currency = newCurrency;
-        wallet.type = newType;
-        wallet.color = newColor;
+        wallet.name = name;
+        wallet.amount = amount;
+        wallet.currency = currency;
+        wallet.type = type;
+        wallet.color = color;
         wallet.lastUpdate = new Date().toISOString().split('T')[0];
         
         const newTotalBalance = wallets
@@ -486,14 +494,9 @@ function editWallet(walletId) {
         addWalletModal.classList.remove('active');
         walletForm.reset();
         
-        // Возвращаем стандартный обработчик и удаляем этот
+        // Возвращаем стандартный обработчик
         walletForm.onsubmit = handleAddWallet;
-        walletForm.removeEventListener('submit', editFormHandler);
     };
-
-    // Удаляем старый обработчик и добавляем новый
-    walletForm.onsubmit = null;
-    walletForm.addEventListener('submit', editFormHandler);
 }
 
 function copyWallet(walletId) {
@@ -579,11 +582,6 @@ function getCurrencyName(currency) {
 }
 
 function formatAmount(amount, currency) {
-    // Проверяем, что amount - валидное число
-    if (isNaN(amount) || !isFinite(amount)) {
-        return '0 ' + (currency === 'USD' ? '$' : '₽');
-    }
-    
     const formatter = new Intl.NumberFormat('ru-RU');
     const formatted = formatter.format(Math.abs(amount));
     const symbol = currency === 'USD' ? '$' : '₽';
