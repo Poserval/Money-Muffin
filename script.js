@@ -2,6 +2,13 @@
 let wallets = [];
 let currentSort = 'amount';
 
+// Цвета радуги + черный и серый
+const walletColors = [
+    '#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF', '#5856D6',
+    '#FF2D55', '#AF52DE', '#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA',
+    '#007AFF', '#5856D6', '#1D1D1F', '#8E8E93'
+];
+
 // DOM элементы
 const walletsContainer = document.getElementById('walletsContainer');
 const addWalletBtn = document.getElementById('addWalletBtn');
@@ -11,6 +18,7 @@ const walletForm = document.getElementById('walletForm');
 const sortButtons = document.querySelectorAll('.sort-btn');
 const totalBalanceElement = document.getElementById('totalBalance');
 const balanceChangeElement = document.getElementById('balanceChange');
+const colorOptions = document.getElementById('colorOptions');
 
 // Начальные данные как на картинке
 const initialWallets = [
@@ -20,7 +28,8 @@ const initialWallets = [
         amount: 1000000,
         currency: "RUB",
         type: "deposit",
-        lastUpdate: "2025-10-25"
+        lastUpdate: "2025-10-25",
+        color: '#007AFF'
     },
     {
         id: 2, 
@@ -28,7 +37,8 @@ const initialWallets = [
         amount: 100000,
         currency: "RUB",
         type: "deposit",
-        lastUpdate: "2025-10-25"
+        lastUpdate: "2025-10-25",
+        color: '#4CD964'
     },
     {
         id: 3,
@@ -36,7 +46,8 @@ const initialWallets = [
         amount: 240,
         currency: "RUB", 
         type: "cash",
-        lastUpdate: "2025-10-31"
+        lastUpdate: "2025-10-31",
+        color: '#FFCC00'
     },
     {
         id: 4,
@@ -44,7 +55,8 @@ const initialWallets = [
         amount: -25000,
         currency: "RUB",
         type: "credit",
-        lastUpdate: "2025-10-25"
+        lastUpdate: "2025-10-25",
+        color: '#FF3B30'
     },
     {
         id: 5,
@@ -52,7 +64,8 @@ const initialWallets = [
         amount: -50000,
         currency: "RUB",
         type: "credit", 
-        lastUpdate: "2025-10-25"
+        lastUpdate: "2025-10-25",
+        color: '#FF9500'
     },
     {
         id: 6,
@@ -60,7 +73,8 @@ const initialWallets = [
         amount: 1500,
         currency: "USD",
         type: "account",
-        lastUpdate: "2025-10-25"
+        lastUpdate: "2025-10-25",
+        color: '#5AC8FA'
     }
 ];
 
@@ -68,18 +82,46 @@ const initialWallets = [
 document.addEventListener('DOMContentLoaded', function() {
     loadWallets();
     setupEventListeners();
+    initColorOptions();
 });
+
+// Инициализация выбора цвета
+function initColorOptions() {
+    walletColors.forEach((color, index) => {
+        const colorOption = document.createElement('div');
+        colorOption.className = 'color-option';
+        colorOption.style.backgroundColor = color;
+        colorOption.dataset.color = color;
+        
+        if (index === 0) {
+            colorOption.classList.add('selected');
+        }
+        
+        colorOption.addEventListener('click', function() {
+            document.querySelectorAll('.color-option').forEach(opt => {
+                opt.classList.remove('selected');
+            });
+            this.classList.add('selected');
+        });
+        
+        colorOptions.appendChild(colorOption);
+    });
+}
+
+// Получение выбранного цвета
+function getSelectedColor() {
+    const selected = document.querySelector('.color-option.selected');
+    return selected ? selected.dataset.color : walletColors[0];
+}
 
 // Загрузка данных
 function loadWallets() {
     try {
-        // Пробуем загрузить из LocalStorage
         const savedWallets = localStorage.getItem('moneyMuffinWallets');
         
         if (savedWallets && JSON.parse(savedWallets).length > 0) {
             wallets = JSON.parse(savedWallets);
         } else {
-            // Используем начальные данные
             wallets = [...initialWallets];
             saveWallets();
         }
@@ -112,7 +154,6 @@ function setupEventListeners() {
 
     walletForm.addEventListener('submit', handleAddWallet);
 
-    // Обработчики сортировки
     sortButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const sortType = btn.dataset.sort;
@@ -120,7 +161,6 @@ function setupEventListeners() {
         });
     });
 
-    // Закрытие модального окна по клику вне его
     addWalletModal.addEventListener('click', (e) => {
         if (e.target === addWalletModal) {
             addWalletModal.classList.remove('active');
@@ -137,6 +177,7 @@ function handleAddWallet(e) {
     const amount = parseFloat(document.getElementById('walletAmount').value);
     const currency = document.getElementById('walletCurrency').value;
     const type = document.getElementById('walletType').value;
+    const color = getSelectedColor();
 
     const newWallet = {
         id: Date.now(),
@@ -144,6 +185,7 @@ function handleAddWallet(e) {
         amount: amount,
         currency: currency,
         type: type,
+        color: color,
         lastUpdate: new Date().toISOString().split('T')[0]
     };
 
@@ -160,10 +202,8 @@ function handleAddWallet(e) {
 function setSort(sortType) {
     currentSort = sortType;
     
-    // Обновляем активную кнопку
     sortButtons.forEach(btn => {
         btn.classList.toggle('active', btn.dataset.sort === sortType);
-        // Обновляем текст кнопки "Сумма"
         if (btn.dataset.sort === 'amount') {
             btn.textContent = sortType === 'amount' ? 'Сумма ▼' : 'Сумма';
         }
@@ -174,16 +214,14 @@ function setSort(sortType) {
 
 // Отображение кошельков
 function renderWallets() {
-    // Сортируем кошельки
     const sortedWallets = [...wallets].sort((a, b) => {
         if (currentSort === 'name') {
             return a.name.localeCompare(b.name);
         } else {
-            return b.amount - a.amount; // По убыванию суммы
+            return b.amount - a.amount;
         }
     });
 
-    // Группируем по валюте в правильном порядке
     const groupedWallets = {
         'RUB': sortedWallets.filter(wallet => wallet.currency === 'RUB'),
         'USD': sortedWallets.filter(wallet => wallet.currency === 'USD')
@@ -191,7 +229,6 @@ function renderWallets() {
     
     walletsContainer.innerHTML = '';
 
-    // Отображаем кошельки по группам в правильном порядке
     for (const currency of ['RUB', 'USD']) {
         const currencyWallets = groupedWallets[currency];
         if (currencyWallets.length > 0) {
@@ -228,6 +265,7 @@ function createCurrencySection(currency, wallets) {
 function createWalletElement(wallet) {
     const walletDiv = document.createElement('div');
     walletDiv.className = 'wallet-item';
+    walletDiv.style.borderLeft = `4px solid ${wallet.color}`;
 
     const amountClass = wallet.amount >= 0 ? 'positive' : 'negative';
     const amountFormatted = formatAmount(wallet.amount, wallet.currency);
@@ -249,8 +287,6 @@ function updateTotalBalance() {
         .reduce((sum, wallet) => sum + wallet.amount, 0);
 
     totalBalanceElement.textContent = formatAmount(totalRub, 'RUB');
-    
-    // Для демонстрации оставляем статичное изменение
     balanceChangeElement.textContent = '-13 767 ₽';
     balanceChangeElement.className = 'balance-change negative';
 }
