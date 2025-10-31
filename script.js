@@ -274,6 +274,9 @@ function handleAddWallet(e) {
     
     addWalletModal.classList.remove('active');
     walletForm.reset();
+    
+    // Показываем сообщение об успешном создании
+    alert('Кошелек создан');
 }
 
 // Установка сортировки
@@ -493,6 +496,9 @@ function editWallet(walletId) {
         
         addWalletModal.classList.remove('active');
         walletForm.reset();
+        
+        // Показываем сообщение об успешном редактировании
+        alert('Изменения внесены');
         
         // Возвращаем стандартный обработчик
         walletForm.onsubmit = handleAddWallet;
