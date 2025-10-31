@@ -278,18 +278,16 @@ function createWalletElement(wallet) {
     const dateFormatted = formatDate(wallet.lastUpdate);
 
     walletDiv.innerHTML = `
-        <div class="wallet-header">
-            <div class="wallet-name">${wallet.name}</div>
-            <div class="wallet-actions">
-                <button class="wallet-action-btn" title="Редактировать">✏️</button>
-                <button class="wallet-action-btn" title="Копировать">📋</button>
-                <button class="wallet-action-btn" title="Закрепить">📌</button>
-                <button class="wallet-action-btn" title="Удалить">🗑️</button>
-            </div>
-        </div>
         <div class="wallet-content">
+            <div class="wallet-name">${wallet.name}</div>
             <div class="wallet-amount ${amountClass}">${amountFormatted}</div>
             <div class="wallet-date">Изм: ${dateFormatted}</div>
+        </div>
+        <div class="wallet-actions">
+            <button class="wallet-action-btn" title="Редактировать">✏️</button>
+            <button class="wallet-action-btn" title="Копировать">📋</button>
+            <button class="wallet-action-btn" title="Закрепить">📌</button>
+            <button class="wallet-action-btn" title="Удалить">🗑️</button>
         </div>
     `;
 
