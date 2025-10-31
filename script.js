@@ -84,8 +84,9 @@ const initialWallets = [
     }
 ];
 
-// Переменная для хранения предыдущего баланса
+// Переменные для хранения данных о балансе
 let previousTotalBalance = 1025240; // Начальное значение как на картинке
+let lastBalanceChange = -13767; // Начальное значение изменения
 
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', function() {
@@ -134,9 +135,14 @@ function loadWallets() {
     try {
         const savedWallets = localStorage.getItem('moneyMuffinWallets');
         const savedPreviousBalance = localStorage.getItem('moneyMuffinPreviousBalance');
+        const savedLastChange = localStorage.getItem('moneyMuffinLastChange');
         
         if (savedPreviousBalance) {
             previousTotalBalance = parseFloat(savedPreviousBalance);
+        }
+        
+        if (savedLastChange) {
+            lastBalanceChange = parseFloat(savedLastChange);
         }
         
         if (savedWallets && JSON.parse(savedWallets).length > 0) {
@@ -160,6 +166,7 @@ function loadWallets() {
 function saveWallets() {
     localStorage.setItem('moneyMuffinWallets', JSON.stringify(wallets));
     localStorage.setItem('moneyMuffinPreviousBalance', previousTotalBalance.toString());
+    localStorage.setItem('moneyMuffinLastChange', lastBalanceChange.toString());
 }
 
 // Настройка обработчиков событий
@@ -213,9 +220,22 @@ function handleAddWallet(e) {
         pinned: false
     };
 
+    const oldTotalBalance = wallets
+        .filter(wallet => wallet.currency === 'RUB')
+        .reduce((sum, wallet) => sum + wallet.amount, 0);
+
     wallets.push(newWallet);
     saveWallets();
     renderWallets();
+    
+    const newTotalBalance = wallets
+        .filter(wallet => wallet.currency === 'RUB')
+        .reduce((sum, wallet) => sum + wallet.amount, 0);
+    
+    // Вычисляем изменение баланса
+    lastBalanceChange = newTotalBalance - oldTotalBalance;
+    previousTotalBalance = oldTotalBalance;
+    
     updateTotalBalance();
     
     addWalletModal.classList.remove('active');
@@ -344,9 +364,22 @@ function createWalletElement(wallet) {
 // Функции для действий с кошельками
 function deleteWallet(walletId) {
     if (confirm('Удалить этот кошелек?')) {
+        const oldTotalBalance = wallets
+            .filter(wallet => wallet.currency === 'RUB')
+            .reduce((sum, wallet) => sum + wallet.amount, 0);
+
         wallets = wallets.filter(wallet => wallet.id !== walletId);
         saveWallets();
         renderWallets();
+        
+        const newTotalBalance = wallets
+            .filter(wallet => wallet.currency === 'RUB')
+            .reduce((sum, wallet) => sum + wallet.amount, 0);
+        
+        // Вычисляем изменение баланса
+        lastBalanceChange = newTotalBalance - oldTotalBalance;
+        previousTotalBalance = oldTotalBalance;
+        
         updateTotalBalance();
     }
 }
@@ -376,6 +409,10 @@ function editWallet(walletId) {
     walletForm.onsubmit = function(e) {
         e.preventDefault();
         
+        const oldTotalBalance = wallets
+            .filter(wallet => wallet.currency === 'RUB')
+            .reduce((sum, wallet) => sum + wallet.amount, 0);
+        
         // Обновляем данные кошелька
         wallet.name = document.getElementById('walletName').value;
         wallet.amount = parseFloat(document.getElementById('walletAmount').value);
@@ -386,6 +423,15 @@ function editWallet(walletId) {
 
         saveWallets();
         renderWallets();
+        
+        const newTotalBalance = wallets
+            .filter(wallet => wallet.currency === 'RUB')
+            .reduce((sum, wallet) => sum + wallet.amount, 0);
+        
+        // Вычисляем изменение баланса
+        lastBalanceChange = newTotalBalance - oldTotalBalance;
+        previousTotalBalance = oldTotalBalance;
+        
         updateTotalBalance();
         
         addWalletModal.classList.remove('active');
@@ -399,6 +445,10 @@ function editWallet(walletId) {
 function copyWallet(walletId) {
     const wallet = wallets.find(w => w.id === walletId);
     if (wallet) {
+        const oldTotalBalance = wallets
+            .filter(wallet => wallet.currency === 'RUB')
+            .reduce((sum, wallet) => sum + wallet.amount, 0);
+
         const copiedWallet = {
             ...wallet,
             id: Date.now(),
@@ -408,6 +458,15 @@ function copyWallet(walletId) {
         wallets.push(copiedWallet);
         saveWallets();
         renderWallets();
+        
+        const newTotalBalance = wallets
+            .filter(wallet => wallet.currency === 'RUB')
+            .reduce((sum, wallet) => sum + wallet.amount, 0);
+        
+        // Вычисляем изменение баланса
+        lastBalanceChange = newTotalBalance - oldTotalBalance;
+        previousTotalBalance = oldTotalBalance;
+        
         updateTotalBalance();
     }
 }
@@ -428,19 +487,16 @@ function updateTotalBalance() {
         .filter(wallet => wallet.currency === 'RUB')
         .reduce((sum, wallet) => sum + wallet.amount, 0);
 
-    // Вычисляем разницу
-    const balanceChange = totalRub - previousTotalBalance;
-    
     // Обновляем отображение
     totalBalanceElement.textContent = formatAmount(totalRub, 'RUB');
     
     // Форматируем изменение баланса
     let changeText = '';
-    if (balanceChange > 0) {
-        changeText = `+${formatAmount(balanceChange, 'RUB')}`;
+    if (lastBalanceChange > 0) {
+        changeText = `+${formatAmount(lastBalanceChange, 'RUB')}`;
         balanceChangeElement.className = 'balance-change positive';
-    } else if (balanceChange < 0) {
-        changeText = `${formatAmount(balanceChange, 'RUB')}`;
+    } else if (lastBalanceChange < 0) {
+        changeText = `${formatAmount(lastBalanceChange, 'RUB')}`;
         balanceChangeElement.className = 'balance-change negative';
     } else {
         changeText = `${formatAmount(0, 'RUB')}`;
@@ -449,8 +505,6 @@ function updateTotalBalance() {
     
     balanceChangeElement.textContent = changeText;
     
-    // Сохраняем текущий баланс как предыдущий для следующего расчета
-    previousTotalBalance = totalRub;
     saveWallets();
 }
 
