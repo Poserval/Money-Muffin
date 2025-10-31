@@ -87,9 +87,6 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Инициализация выбора цвета
 function initColorOptions() {
-    console.log('Инициализация цветов...'); // Для отладки
-    
-    // Очищаем контейнер
     colorOptions.innerHTML = '';
     
     walletColors.forEach((color, index) => {
@@ -98,7 +95,6 @@ function initColorOptions() {
         colorOption.style.backgroundColor = color;
         colorOption.dataset.color = color;
         
-        // Добавляем рамку для светлых цветов чтобы были видны
         if (color === '#FFCC00' || color === '#4CD964' || color === '#5AC8FA') {
             colorOption.style.border = '1px solid #e5e5e7';
         }
@@ -116,8 +112,6 @@ function initColorOptions() {
         
         colorOptions.appendChild(colorOption);
     });
-    
-    console.log('Цвета созданы:', colorOptions.children.length); // Для отладки
 }
 
 // Получение выбранного цвета
@@ -277,7 +271,7 @@ function createCurrencySection(currency, wallets) {
 function createWalletElement(wallet) {
     const walletDiv = document.createElement('div');
     walletDiv.className = 'wallet-item';
-    walletDiv.style.borderLeft = `4px solid ${wallet.color}`;
+    walletDiv.style.setProperty('--wallet-color', wallet.color);
 
     const amountClass = wallet.amount >= 0 ? 'positive' : 'negative';
     const amountFormatted = formatAmount(wallet.amount, wallet.currency);
