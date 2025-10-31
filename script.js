@@ -87,6 +87,7 @@ const initialWallets = [
 // Переменные для хранения данных о балансе
 let previousTotalBalance = 1025240; // Начальное значение как на картинке
 let lastBalanceChange = -13767; // Начальное значение изменения
+let showBalanceChange = true; // Флаг для отображения изменения баланса
 
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', function() {
@@ -136,6 +137,7 @@ function loadWallets() {
         const savedWallets = localStorage.getItem('moneyMuffinWallets');
         const savedPreviousBalance = localStorage.getItem('moneyMuffinPreviousBalance');
         const savedLastChange = localStorage.getItem('moneyMuffinLastChange');
+        const savedShowChange = localStorage.getItem('moneyMuffinShowChange');
         
         if (savedPreviousBalance) {
             previousTotalBalance = parseFloat(savedPreviousBalance);
@@ -143,6 +145,10 @@ function loadWallets() {
         
         if (savedLastChange) {
             lastBalanceChange = parseFloat(savedLastChange);
+        }
+        
+        if (savedShowChange) {
+            showBalanceChange = JSON.parse(savedShowChange);
         }
         
         if (savedWallets && JSON.parse(savedWallets).length > 0) {
@@ -167,6 +173,7 @@ function saveWallets() {
     localStorage.setItem('moneyMuffinWallets', JSON.stringify(wallets));
     localStorage.setItem('moneyMuffinPreviousBalance', previousTotalBalance.toString());
     localStorage.setItem('moneyMuffinLastChange', lastBalanceChange.toString());
+    localStorage.setItem('moneyMuffinShowChange', JSON.stringify(showBalanceChange));
 }
 
 // Настройка обработчиков событий
@@ -237,6 +244,9 @@ function handleAddWallet(e) {
     // Вычисляем изменение баланса
     lastBalanceChange = newTotalBalance - oldTotalBalance;
     previousTotalBalance = oldTotalBalance;
+    
+    // Показываем изменение только если оно не равно нулю
+    showBalanceChange = lastBalanceChange !== 0;
     
     updateTotalBalance();
     
@@ -382,6 +392,9 @@ function deleteWallet(walletId) {
         lastBalanceChange = newTotalBalance - oldTotalBalance;
         previousTotalBalance = oldTotalBalance;
         
+        // Показываем изменение только если оно не равно нулю
+        showBalanceChange = lastBalanceChange !== 0;
+        
         updateTotalBalance();
     }
 }
@@ -434,6 +447,9 @@ function editWallet(walletId) {
         lastBalanceChange = newTotalBalance - oldTotalBalance;
         previousTotalBalance = oldTotalBalance;
         
+        // Показываем изменение только если оно не равно нулю
+        showBalanceChange = lastBalanceChange !== 0;
+        
         updateTotalBalance();
         
         addWalletModal.classList.remove('active');
@@ -469,6 +485,9 @@ function copyWallet(walletId) {
         lastBalanceChange = newTotalBalance - oldTotalBalance;
         previousTotalBalance = oldTotalBalance;
         
+        // Показываем изменение только если оно не равно нулю
+        showBalanceChange = lastBalanceChange !== 0;
+        
         updateTotalBalance();
     }
 }
@@ -492,20 +511,22 @@ function updateTotalBalance() {
     // Обновляем отображение
     totalBalanceElement.textContent = formatAmount(totalRub, 'RUB');
     
-    // Форматируем изменение баланса
-    let changeText = '';
-    if (lastBalanceChange > 0) {
-        changeText = `+${formatAmount(lastBalanceChange, 'RUB')}`;
-        balanceChangeElement.className = 'balance-change positive';
-    } else if (lastBalanceChange < 0) {
-        changeText = `${formatAmount(lastBalanceChange, 'RUB')}`;
-        balanceChangeElement.className = 'balance-change negative';
+    // Показываем изменение баланса только если есть разница или флаг установлен
+    if (showBalanceChange && lastBalanceChange !== 0) {
+        let changeText = '';
+        if (lastBalanceChange > 0) {
+            changeText = `+${formatAmount(lastBalanceChange, 'RUB')}`;
+            balanceChangeElement.className = 'balance-change positive';
+        } else if (lastBalanceChange < 0) {
+            changeText = `${formatAmount(lastBalanceChange, 'RUB')}`;
+            balanceChangeElement.className = 'balance-change negative';
+        }
+        
+        balanceChangeElement.textContent = changeText;
+        balanceChangeElement.style.display = 'block';
     } else {
-        changeText = `${formatAmount(0, 'RUB')}`;
-        balanceChangeElement.className = 'balance-change neutral';
+        balanceChangeElement.style.display = 'none';
     }
-    
-    balanceChangeElement.textContent = changeText;
     
     saveWallets();
 }
