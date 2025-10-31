@@ -212,11 +212,15 @@ function createCurrencySection(currency, wallets) {
     
     section.appendChild(title);
 
+    const walletsGrid = document.createElement('div');
+    walletsGrid.className = 'wallets-grid';
+    
     wallets.forEach(wallet => {
         const walletElement = createWalletElement(wallet);
-        section.appendChild(walletElement);
+        walletsGrid.appendChild(walletElement);
     });
 
+    section.appendChild(walletsGrid);
     return section;
 }
 
@@ -230,10 +234,8 @@ function createWalletElement(wallet) {
     const dateFormatted = formatDate(wallet.lastUpdate);
 
     walletDiv.innerHTML = `
-        <div class="wallet-info">
-            <div class="wallet-name">${wallet.name}</div>
-            <div class="wallet-date">Изм: ${dateFormatted}</div>
-        </div>
+        <div class="wallet-name">${wallet.name}</div>
+        <div class="wallet-date">Изм: ${dateFormatted}</div>
         <div class="wallet-amount ${amountClass}">${amountFormatted}</div>
     `;
 
@@ -274,10 +276,10 @@ function formatDate(dateString) {
     try {
         const date = new Date(dateString);
         if (isNaN(date.getTime())) {
-            return dateString; // Возвращаем оригинальную строку если дата невалидна
+            return dateString;
         }
         return date.toLocaleDateString('ru-RU');
     } catch (error) {
-        return dateString; // Возвращаем оригинальную строку при ошибке
+        return dateString;
     }
 }
