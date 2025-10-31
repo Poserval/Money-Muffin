@@ -128,23 +128,32 @@ body {
 .wallets-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 0;
+    gap: 12px;
+    padding: 12px;
 }
 
 .wallet-item {
     background: white;
+    border-radius: 12px;
     padding: 12px;
-    border-bottom: 1px solid #e5e5e7;
-    border-right: 1px solid #e5e5e7;
-    min-height: 80px;
+    border: 1px solid #e5e5e7;
+    position: relative;
+    min-height: 100px;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
 }
 
-/* Убираем правую границу у четных элементов */
-.wallet-item:nth-child(2n) {
-    border-right: none;
+/* Цветная полоса сверху */
+.wallet-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    border-radius: 12px 12px 0 0;
+    background: var(--wallet-color, #007AFF);
 }
 
 .wallet-name {
@@ -152,6 +161,7 @@ body {
     font-weight: 500;
     margin-bottom: 4px;
     color: #1d1d1f;
+    margin-top: 4px;
 }
 
 .wallet-date {
