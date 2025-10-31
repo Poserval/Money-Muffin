@@ -278,12 +278,80 @@ function createWalletElement(wallet) {
     const dateFormatted = formatDate(wallet.lastUpdate);
 
     walletDiv.innerHTML = `
-        <div class="wallet-name">${wallet.name}</div>
-        <div class="wallet-date">Изм: ${dateFormatted}</div>
-        <div class="wallet-amount ${amountClass}">${amountFormatted}</div>
+        <div class="wallet-header">
+            <div class="wallet-name">${wallet.name}</div>
+            <div class="wallet-actions">
+                <button class="wallet-action-btn" title="Редактировать">✏️</button>
+                <button class="wallet-action-btn" title="Копировать">📋</button>
+                <button class="wallet-action-btn" title="Закрепить">📌</button>
+                <button class="wallet-action-btn" title="Удалить">🗑️</button>
+            </div>
+        </div>
+        <div class="wallet-content">
+            <div class="wallet-amount ${amountClass}">${amountFormatted}</div>
+            <div class="wallet-date">Изм: ${dateFormatted}</div>
+        </div>
     `;
 
+    // Добавляем обработчики для кнопок
+    const deleteBtn = walletDiv.querySelector('.wallet-actions button:nth-child(4)');
+    deleteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        deleteWallet(wallet.id);
+    });
+
+    const editBtn = walletDiv.querySelector('.wallet-actions button:nth-child(1)');
+    editBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        editWallet(wallet.id);
+    });
+
+    const copyBtn = walletDiv.querySelector('.wallet-actions button:nth-child(2)');
+    copyBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        copyWallet(wallet.id);
+    });
+
+    const pinBtn = walletDiv.querySelector('.wallet-actions button:nth-child(3)');
+    pinBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        pinWallet(wallet.id);
+    });
+
     return walletDiv;
+}
+
+// Функции для действий с кошельками
+function deleteWallet(walletId) {
+    if (confirm('Удалить этот кошелек?')) {
+        wallets = wallets.filter(wallet => wallet.id !== walletId);
+        saveWallets();
+        renderWallets();
+        updateTotalBalance();
+    }
+}
+
+function editWallet(walletId) {
+    alert('Редактирование кошелька - в разработке');
+}
+
+function copyWallet(walletId) {
+    const wallet = wallets.find(w => w.id === walletId);
+    if (wallet) {
+        const copiedWallet = {
+            ...wallet,
+            id: Date.now(),
+            name: `${wallet.name} (копия)`
+        };
+        wallets.push(copiedWallet);
+        saveWallets();
+        renderWallets();
+        updateTotalBalance();
+    }
+}
+
+function pinWallet(walletId) {
+    alert('Закрепление кошелька - в разработке');
 }
 
 // Обновление общего баланса
