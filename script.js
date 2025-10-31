@@ -80,18 +80,28 @@ const initialWallets = [
 
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', function() {
+    initColorOptions();
     loadWallets();
     setupEventListeners();
-    initColorOptions();
 });
 
 // Инициализация выбора цвета
 function initColorOptions() {
+    console.log('Инициализация цветов...'); // Для отладки
+    
+    // Очищаем контейнер
+    colorOptions.innerHTML = '';
+    
     walletColors.forEach((color, index) => {
         const colorOption = document.createElement('div');
         colorOption.className = 'color-option';
         colorOption.style.backgroundColor = color;
         colorOption.dataset.color = color;
+        
+        // Добавляем рамку для светлых цветов чтобы были видны
+        if (color === '#FFCC00' || color === '#4CD964' || color === '#5AC8FA') {
+            colorOption.style.border = '1px solid #e5e5e7';
+        }
         
         if (index === 0) {
             colorOption.classList.add('selected');
@@ -106,6 +116,8 @@ function initColorOptions() {
         
         colorOptions.appendChild(colorOption);
     });
+    
+    console.log('Цвета созданы:', colorOptions.children.length); // Для отладки
 }
 
 // Получение выбранного цвета
