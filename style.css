@@ -88,23 +88,26 @@ body {
 }
 
 .total-balance {
-    text-align: left;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .balance-label {
     font-size: 16px;
     opacity: 0.9;
-    margin-bottom: 8px;
     font-weight: 500;
+    display: flex;
+    align-items: center;
+    height: 50px;
 }
 
 .balance-amount {
     font-size: 36px;
     font-weight: 700;
-    margin-bottom: 2px;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     line-height: 1.1;
-    margin-top: 15px;
+    text-align: right;
 }
 
 .balance-change {
@@ -112,6 +115,7 @@ body {
     opacity: 0.9;
     font-weight: 500;
     margin-top: 8px;
+    text-align: right;
 }
 
 .main {
@@ -490,3 +494,12 @@ body {
         height: 32px;
     }
 }
+
+    padding: 0;
+    box-sizing: border-box;
+}
+
+    top: -1px;
+}
+
+.total-balance-
