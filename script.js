@@ -19,6 +19,7 @@ const sortButtons = document.querySelectorAll('.sort-btn');
 const totalBalanceElement = document.getElementById('totalBalance');
 const balanceChangeElement = document.getElementById('balanceChange');
 const colorOptions = document.getElementById('colorOptions');
+const resetChangeBtn = document.getElementById('resetChangeBtn'); // ДОБАВЛЕНО
 
 // Начальные данные как на картинке
 const initialWallets = [
@@ -204,6 +205,16 @@ function setupEventListeners() {
             walletForm.reset();
         }
     });
+
+    // ДОБАВЛЕНО: Обработчик для кнопки сброса
+    resetChangeBtn.addEventListener('click', resetBalanceChange);
+}
+
+// ДОБАВЛЕНО: Функция сброса изменения баланса
+function resetBalanceChange() {
+    lastBalanceChange = 0;
+    showBalanceChange = false;
+    updateTotalBalance();
 }
 
 // Обработка добавления кошелька
@@ -523,8 +534,10 @@ function updateTotalBalance() {
         
         balanceChangeElement.textContent = changeText;
         balanceChangeElement.style.display = 'block';
+        resetChangeBtn.style.display = 'flex'; // ДОБАВЛЕНО: показываем кнопку сброса
     } else {
         balanceChangeElement.style.display = 'none';
+        resetChangeBtn.style.display = 'none'; // ДОБАВЛЕНО: скрываем кнопку сброса
     }
     
     saveWallets();
