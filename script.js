@@ -29,7 +29,8 @@ const initialWallets = [
         currency: "RUB",
         type: "deposit",
         lastUpdate: "2025-10-25",
-        color: '#007AFF'
+        color: '#007AFF',
+        pinned: false
     },
     {
         id: 2, 
@@ -38,7 +39,8 @@ const initialWallets = [
         currency: "RUB",
         type: "deposit",
         lastUpdate: "2025-10-25",
-        color: '#4CD964'
+        color: '#4CD964',
+        pinned: false
     },
     {
         id: 3,
@@ -47,7 +49,8 @@ const initialWallets = [
         currency: "RUB", 
         type: "cash",
         lastUpdate: "2025-10-31",
-        color: '#FFCC00'
+        color: '#FFCC00',
+        pinned: false
     },
     {
         id: 4,
@@ -56,7 +59,8 @@ const initialWallets = [
         currency: "RUB",
         type: "credit",
         lastUpdate: "2025-10-25",
-        color: '#FF3B30'
+        color: '#FF3B30',
+        pinned: false
     },
     {
         id: 5,
@@ -65,7 +69,8 @@ const initialWallets = [
         currency: "RUB",
         type: "credit", 
         lastUpdate: "2025-10-25",
-        color: '#FF9500'
+        color: '#FF9500',
+        pinned: false
     },
     {
         id: 6,
@@ -74,7 +79,8 @@ const initialWallets = [
         currency: "USD",
         type: "account",
         lastUpdate: "2025-10-25",
-        color: '#5AC8FA'
+        color: '#5AC8FA',
+        pinned: false
     }
 ];
 
@@ -151,6 +157,8 @@ function saveWallets() {
 function setupEventListeners() {
     addWalletBtn.addEventListener('click', () => {
         addWalletModal.classList.add('active');
+        // Возвращаем стандартный обработчик для добавления
+        walletForm.onsubmit = handleAddWallet;
     });
 
     cancelBtn.addEventListener('click', () => {
@@ -192,7 +200,8 @@ function handleAddWallet(e) {
         currency: currency,
         type: type,
         color: color,
-        lastUpdate: new Date().toISOString().split('T')[0]
+        lastUpdate: new Date().toISOString().split('T')[0],
+        pinned: false
     };
 
     wallets.push(newWallet);
@@ -221,6 +230,10 @@ function setSort(sortType) {
 // Отображение кошельков
 function renderWallets() {
     const sortedWallets = [...wallets].sort((a, b) => {
+        // Сначала закрепленные кошельки
+        if (a.pinned && !b.pinned) return -1;
+        if (!a.pinned && b.pinned) return 1;
+        
         if (currentSort === 'name') {
             return a.name.localeCompare(b.name);
         } else {
@@ -279,14 +292,14 @@ function createWalletElement(wallet) {
 
     walletDiv.innerHTML = `
         <div class="wallet-content">
-            <div class="wallet-name">${wallet.name}</div>
+            <div class="wallet-name">${wallet.name} ${wallet.pinned ? '📌' : ''}</div>
             <div class="wallet-amount ${amountClass}">${amountFormatted}</div>
             <div class="wallet-date">Изм: ${dateFormatted}</div>
         </div>
         <div class="wallet-actions">
             <button class="wallet-action-btn" title="Редактировать">✏️</button>
             <button class="wallet-action-btn" title="Копировать">📋</button>
-            <button class="wallet-action-btn" title="Закрепить">📌</button>
+            <button class="wallet-action-btn" title="${wallet.pinned ? 'Открепить' : 'Закрепить'}">${wallet.pinned ? '📌' : '📍'}</button>
             <button class="wallet-action-btn" title="Удалить">🗑️</button>
         </div>
     `;
@@ -313,7 +326,7 @@ function createWalletElement(wallet) {
     const pinBtn = walletDiv.querySelector('.wallet-actions button:nth-child(3)');
     pinBtn.addEventListener('click', (e) => {
         e.stopPropagation();
-        pinWallet(wallet.id);
+        togglePinWallet(wallet.id);
     });
 
     return walletDiv;
@@ -330,7 +343,48 @@ function deleteWallet(walletId) {
 }
 
 function editWallet(walletId) {
-    alert('Редактирование кошелька - в разработке');
+    const wallet = wallets.find(w => w.id === walletId);
+    if (!wallet) return;
+
+    // Заполняем форму данными кошелька
+    document.getElementById('walletName').value = wallet.name;
+    document.getElementById('walletAmount').value = wallet.amount;
+    document.getElementById('walletCurrency').value = wallet.currency;
+    document.getElementById('walletType').value = wallet.type;
+
+    // Устанавливаем выбранный цвет
+    document.querySelectorAll('.color-option').forEach(opt => {
+        opt.classList.remove('selected');
+        if (opt.dataset.color === wallet.color) {
+            opt.classList.add('selected');
+        }
+    });
+
+    // Показываем модальное окно
+    addWalletModal.classList.add('active');
+
+    // Удаляем старый обработчик и добавляем новый для редактирования
+    walletForm.onsubmit = function(e) {
+        e.preventDefault();
+        
+        // Обновляем данные кошелька
+        wallet.name = document.getElementById('walletName').value;
+        wallet.amount = parseFloat(document.getElementById('walletAmount').value);
+        wallet.currency = document.getElementById('walletCurrency').value;
+        wallet.type = document.getElementById('walletType').value;
+        wallet.color = getSelectedColor();
+        wallet.lastUpdate = new Date().toISOString().split('T')[0];
+
+        saveWallets();
+        renderWallets();
+        updateTotalBalance();
+        
+        addWalletModal.classList.remove('active');
+        walletForm.reset();
+        
+        // Возвращаем стандартный обработчик
+        walletForm.onsubmit = handleAddWallet;
+    };
 }
 
 function copyWallet(walletId) {
@@ -339,7 +393,8 @@ function copyWallet(walletId) {
         const copiedWallet = {
             ...wallet,
             id: Date.now(),
-            name: `${wallet.name} (копия)`
+            name: `${wallet.name} (копия)`,
+            pinned: false
         };
         wallets.push(copiedWallet);
         saveWallets();
@@ -348,8 +403,14 @@ function copyWallet(walletId) {
     }
 }
 
-function pinWallet(walletId) {
-    alert('Закрепление кошелька - в разработке');
+function togglePinWallet(walletId) {
+    const walletIndex = wallets.findIndex(w => w.id === walletId);
+    if (walletIndex !== -1) {
+        wallets[walletIndex].pinned = !wallets[walletIndex].pinned;
+        saveWallets();
+        renderWallets();
+        updateTotalBalance();
+    }
 }
 
 // Обновление общего баланса
