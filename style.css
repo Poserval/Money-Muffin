@@ -30,7 +30,7 @@ body {
 
 .app-header {
     background: white;
-    padding: 16px 16px;
+    padding: 15px 16px;
     border-bottom: 1px solid #e5e5e7;
     text-align: center;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -41,7 +41,7 @@ body {
 }
 
 .app-title {
-    font-size: 32px;
+    font-size: 30px;
     font-weight: 800;
     margin: 0;
     text-align: center;
@@ -57,7 +57,7 @@ body {
 
 .app-title::before {
     content: 'Ⓐ';
-    font-size: 28px;
+    font-size: 26px;
     margin-right: 8px;
     color: #007AFF;
     text-shadow: 
@@ -69,7 +69,7 @@ body {
 
 .total-balance-section {
     background: linear-gradient(135deg, #007AFF 0%, #0056CC 100%);
-    padding: 25px 20px;
+    padding: 22px 20px;
     color: white;
     border-radius: 0 0 20px 20px;
     box-shadow: 0 4px 12px rgba(0, 122, 255, 0.3);
@@ -94,13 +94,13 @@ body {
 }
 
 .balance-label {
-    font-size: 16px;
+    font-size: 15px;
     opacity: 0.9;
     font-weight: 500;
     display: flex;
     align-items: center;
-    height: 50px;
-    margin-top: 15px;
+    height: 45px;
+    margin-top: 13px;
 }
 
 .balance-right {
@@ -110,23 +110,23 @@ body {
 }
 
 .balance-amount {
-    font-size: 36px;
+    font-size: 32px;
     font-weight: 700;
     text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
     line-height: 1.1;
     text-align: right;
-    margin-top: 15px;
+    margin-top: 13px;
 }
 
 .balance-change-container {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-top: 8px;
+    margin-top: 6px;
 }
 
 .balance-change {
-    font-size: 16px;
+    font-size: 15px;
     opacity: 0.9;
     font-weight: 500;
     text-align: right;
@@ -138,13 +138,13 @@ body {
     border: 1px solid rgba(255, 255, 255, 0.3);
     color: white;
     border-radius: 6px;
-    width: 24px;
-    height: 24px;
+    width: 22px;
+    height: 22px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
-    font-size: 14px;
+    font-size: 13px;
     transition: all 0.2s ease;
     opacity: 0.7;
 }
