@@ -19,14 +19,38 @@ document.addEventListener('DOMContentLoaded', function() {
 // Загрузка данных
 async function loadWallets() {
     try {
-        const response = await fetch('Data.json');
-        const data = await response.json();
-        wallets = data.wallets;
-        renderWallets();
-        updateTotalBalance();
+        // Сначала пробуем загрузить из LocalStorage
+        const savedWallets = localStorage.getItem('moneyMuffinWallets');
+        
+        if (savedWallets) {
+            // Используем сохраненные данные
+            wallets = JSON.parse(savedWallets);
+            renderWallets();
+            updateTotalBalance();
+        } else {
+            // Если нет сохраненных данных, загружаем из JSON
+            const response = await fetch('data.json');
+            const data = await response.json();
+            wallets = data.wallets;
+            saveWallets(); // Сохраняем в LocalStorage
+            renderWallets();
+            updateTotalBalance();
+        }
     } catch (error) {
         console.error('Ошибка загрузки данных:', error);
+        // Пробуем загрузить из LocalStorage как запасной вариант
+        const savedWallets = localStorage.getItem('moneyMuffinWallets');
+        if (savedWallets) {
+            wallets = JSON.parse(savedWallets);
+            renderWallets();
+            updateTotalBalance();
+        }
     }
+}
+
+// Сохранение данных в LocalStorage
+function saveWallets() {
+    localStorage.setItem('moneyMuffinWallets', JSON.stringify(wallets));
 }
 
 // Настройка обработчиков событий
@@ -78,6 +102,7 @@ function handleAddWallet(e) {
     };
 
     wallets.push(newWallet);
+    saveWallets(); // Сохраняем в LocalStorage
     renderWallets();
     updateTotalBalance();
     
@@ -202,3 +227,4 @@ function formatDate(dateString) {
     const date = new Date(dateString);
     return date.toLocaleDateString('ru-RU');
 }
+
