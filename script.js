@@ -209,6 +209,11 @@ function handleAddWallet(e) {
     const type = document.getElementById('walletType').value;
     const color = getSelectedColor();
 
+    // Сохраняем текущий баланс ДО добавления кошелька
+    const oldTotalBalance = wallets
+        .filter(wallet => wallet.currency === 'RUB')
+        .reduce((sum, wallet) => sum + wallet.amount, 0);
+
     const newWallet = {
         id: Date.now(),
         name: name,
@@ -220,14 +225,11 @@ function handleAddWallet(e) {
         pinned: false
     };
 
-    const oldTotalBalance = wallets
-        .filter(wallet => wallet.currency === 'RUB')
-        .reduce((sum, wallet) => sum + wallet.amount, 0);
-
     wallets.push(newWallet);
     saveWallets();
     renderWallets();
     
+    // Вычисляем новый баланс ПОСЛЕ добавления кошелька
     const newTotalBalance = wallets
         .filter(wallet => wallet.currency === 'RUB')
         .reduce((sum, wallet) => sum + wallet.amount, 0);
