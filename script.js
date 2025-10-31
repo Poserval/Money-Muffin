@@ -229,13 +229,13 @@ function handleAddWallet(e) {
     // Валидация суммы
     if (!amountInput.trim()) {
         alert('Пожалуйста, введите сумму');
-        return;
+        return false;
     }
 
     const amount = parseFloat(amountInput);
     if (isNaN(amount)) {
         alert('Пожалуйста, введите корректную сумму');
-        return;
+        return false;
     }
 
     // Сохраняем текущий баланс ДО добавления кошелька
@@ -277,6 +277,8 @@ function handleAddWallet(e) {
     
     // Показываем сообщение об успешном создании
     alert('Кошелек создан');
+    
+    return false;
 }
 
 // Установка сортировки
@@ -458,13 +460,13 @@ function editWallet(walletId) {
         // Валидация суммы
         if (!amountInput.trim()) {
             alert('Пожалуйста, введите сумму');
-            return;
+            return false;
         }
 
         const amount = parseFloat(amountInput);
         if (isNaN(amount)) {
             alert('Пожалуйста, введите корректную сумму');
-            return;
+            return false;
         }
 
         const oldTotalBalance = wallets
@@ -502,6 +504,8 @@ function editWallet(walletId) {
         
         // Возвращаем стандартный обработчик
         walletForm.onsubmit = handleAddWallet;
+        
+        return false;
     };
 }
 
