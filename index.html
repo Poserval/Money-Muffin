@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Money Muffin - Учет финансов</title>
+    <title>Money Muffin</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -13,10 +13,8 @@
             
             <div class="total-balance">
                 <div class="balance-label">Общий баланс</div>
-                <div class="balance-amount">
-                    <span id="totalBalance">1 025 240 ₽</span>
-                    <span class="balance-change negative">-13 767 ₽</span>
-                </div>
+                <div class="balance-amount" id="totalBalance">1 025 240 ₽</div>
+                <div class="balance-change negative" id="balanceChange">-13 767 ₽</div>
             </div>
         </header>
 
@@ -29,8 +27,10 @@
 
                 <div class="sort-options">
                     <span>Сортировать:</span>
-                    <button class="sort-btn active" data-sort="name">Имя</button>
-                    <button class="sort-btn" data-sort="amount">Сумма ▼</button>
+                    <div class="sort-buttons">
+                        <button class="sort-btn active" data-sort="name">Имя</button>
+                        <button class="sort-btn" data-sort="amount">Сумма ▼</button>
+                    </div>
                 </div>
 
                 <div class="wallets-container" id="walletsContainer">
@@ -43,37 +43,41 @@
     <!-- Модальное окно для добавления кошелька -->
     <div class="modal" id="addWalletModal">
         <div class="modal-content">
-            <h3>Добавить кошелек</h3>
-            <form id="walletForm">
-                <div class="form-group">
-                    <label for="walletName">Название:</label>
-                    <input type="text" id="walletName" required>
-                </div>
-                <div class="form-group">
-                    <label for="walletAmount">Сумма:</label>
-                    <input type="number" id="walletAmount" required>
-                </div>
-                <div class="form-group">
-                    <label for="walletCurrency">Валюта:</label>
-                    <select id="walletCurrency" required>
-                        <option value="RUB">Рубль (₽)</option>
-                        <option value="USD">Доллар ($)</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="walletType">Тип:</label>
-                    <select id="walletType" required>
-                        <option value="deposit">Вклад</option>
-                        <option value="credit">Кредитная карта</option>
-                        <option value="cash">Наличные</option>
-                        <option value="account">Счет</option>
-                    </select>
-                </div>
-                <div class="form-actions">
-                    <button type="button" class="cancel-btn" id="cancelBtn">Отмена</button>
-                    <button type="submit" class="save-btn">Сохранить</button>
-                </div>
-            </form>
+            <div class="modal-header">
+                <h3>Добавить кошелек</h3>
+            </div>
+            <div class="modal-body">
+                <form id="walletForm">
+                    <div class="form-group">
+                        <label for="walletName">Название:</label>
+                        <input type="text" id="walletName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="walletAmount">Сумма:</label>
+                        <input type="number" id="walletAmount" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="walletCurrency">Валюта:</label>
+                        <select id="walletCurrency" required>
+                            <option value="RUB">Рубль (₽)</option>
+                            <option value="USD">Доллар ($)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="walletType">Тип:</label>
+                        <select id="walletType" required>
+                            <option value="deposit">Вклад</option>
+                            <option value="credit">Кредитная карта</option>
+                            <option value="cash">Наличные</option>
+                            <option value="account">Счет</option>
+                        </select>
+                    </div>
+                    <div class="form-actions">
+                        <button type="button" class="cancel-btn" id="cancelBtn">Отмена</button>
+                        <button type="submit" class="save-btn">Сохранить</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 
