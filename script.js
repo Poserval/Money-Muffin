@@ -56,7 +56,7 @@ const initialWallets = [
     {
         id: 1,
         name: "ДомРФ (вклад)",
-        amount: 1000000,
+        amount: 1000000.50,
         currency: "RUB",
         type: "deposit",
         lastUpdate: "2025-10-25",
@@ -67,7 +67,7 @@ const initialWallets = [
     {
         id: 2, 
         name: "Сбер (Вклад)",
-        amount: 100000,
+        amount: 100000.25,
         currency: "RUB",
         type: "deposit",
         lastUpdate: "2025-10-25",
@@ -78,7 +78,7 @@ const initialWallets = [
     {
         id: 3,
         name: "Наличка",
-        amount: 240,
+        amount: 240.75,
         currency: "RUB", 
         type: "cash",
         lastUpdate: "2025-10-31",
@@ -89,7 +89,7 @@ const initialWallets = [
     {
         id: 4,
         name: "ВТБ (кредитка)",
-        amount: -25000,
+        amount: -25000.30,
         currency: "RUB",
         type: "credit",
         lastUpdate: "2025-10-25",
@@ -100,7 +100,7 @@ const initialWallets = [
     {
         id: 5,
         name: "Альфа банк (кредитка)",
-        amount: -50000,
+        amount: -50000.15,
         currency: "RUB",
         type: "credit", 
         lastUpdate: "2025-10-25",
@@ -111,7 +111,7 @@ const initialWallets = [
     {
         id: 6,
         name: "Долларовый счет",
-        amount: 1500,
+        amount: 1500.99,
         currency: "USD",
         type: "account",
         lastUpdate: "2025-10-25",
@@ -122,8 +122,8 @@ const initialWallets = [
 ];
 
 // Переменные для баланса
-let previousTotalBalance = 1025240;
-let lastBalanceChange = -13767;
+let previousTotalBalance = 1025240.95;
+let lastBalanceChange = -13767.45;
 let showBalanceChange = true;
 
 // Инициализация приложения
@@ -884,9 +884,8 @@ function togglePinWallet(walletId) {
 function updateTotalBalance() {
     const totalBalance = getTotalBalanceInSelectedCurrency();
     
-    // Форматируем сумму
-    const formatter = new Intl.NumberFormat('ru-RU');
-    const formattedBalance = formatter.format(Math.round(totalBalance));
+    // Форматируем сумму с копейками
+    const formattedBalance = formatAmountWithDecimals(totalBalance, selectedCurrency);
     
     // Обновляем отображение
     totalBalanceElement.textContent = formattedBalance;
@@ -895,10 +894,10 @@ function updateTotalBalance() {
     if (showBalanceChange && lastBalanceChange !== 0) {
         let changeText = '';
         if (lastBalanceChange > 0) {
-            changeText = `+${formatAmount(lastBalanceChange, selectedCurrency)}`;
+            changeText = `+${formatAmountWithDecimals(lastBalanceChange, selectedCurrency)}`;
             balanceChangeElement.className = 'balance-change positive';
         } else if (lastBalanceChange < 0) {
-            changeText = `${formatAmount(lastBalanceChange, selectedCurrency)}`;
+            changeText = `${formatAmountWithDecimals(lastBalanceChange, selectedCurrency)}`;
             balanceChangeElement.className = 'balance-change negative';
         }
         
@@ -965,8 +964,8 @@ function clearAllData() {
         localStorage.removeItem('moneyMuffinSelectedCurrency');
         
         wallets = [...initialWallets];
-        previousTotalBalance = 1025240;
-        lastBalanceChange = -13767;
+        previousTotalBalance = 1025240.95;
+        lastBalanceChange = -13767.45;
         showBalanceChange = true;
         currentSort = 'amount';
         sortDirection = 'desc';
@@ -992,12 +991,26 @@ function getCurrencyName(currency) {
     return currencyNames[currency] || currency;
 }
 
-function formatAmount(amount, currency) {
-    const formatter = new Intl.NumberFormat('ru-RU');
+// Форматирование суммы с десятичными знаками
+function formatAmountWithDecimals(amount, currency) {
+    // Определяем количество знаков после запятой в зависимости от валюты
+    const decimalPlaces = currency === 'JPY' ? 0 : 2; // Йены без копеек
+    
+    // Форматируем число
+    const formatter = new Intl.NumberFormat('ru-RU', {
+        minimumFractionDigits: decimalPlaces,
+        maximumFractionDigits: decimalPlaces
+    });
+    
     const formatted = formatter.format(Math.abs(amount));
     const symbol = currencySymbols[currency] || currency;
     
     return `${amount < 0 ? '-' : ''}${formatted} ${symbol}`;
+}
+
+// Старая функция для обратной совместимости (в кошельках)
+function formatAmount(amount, currency) {
+    return formatAmountWithDecimals(amount, currency);
 }
 
 function formatDate(dateString) {
