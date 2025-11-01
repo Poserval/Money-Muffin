@@ -166,11 +166,15 @@ function updateCurrencyDropdown() {
     const availableCurrencies = getAvailableCurrencies();
     currencyDropdown.innerHTML = '';
     
-    availableCurrencies.forEach(currency => {
+    // Фильтруем текущую выбранную валюту из списка
+    const otherCurrencies = availableCurrencies.filter(currency => currency !== selectedCurrency);
+    
+    otherCurrencies.forEach(currency => {
         const currencyOption = document.createElement('div');
         currencyOption.className = 'currency-option';
         currencyOption.dataset.currency = currency;
         currencyOption.textContent = currencySymbols[currency];
+        currencyOption.title = getCurrencyName(currency);
         
         currencyOption.addEventListener('click', (e) => {
             e.stopPropagation();
@@ -278,12 +282,12 @@ function setupEventListeners() {
     confirmDeleteBtn.addEventListener('click', clearAllData);
     
     // Обработчики для селектора валют
-    currencySelector.addEventListener('click', toggleCurrencyDropdown);
+    selectedCurrencyElement.addEventListener('click', toggleCurrencyDropdown);
     
     // Закрытие выпадающих списков при клике вне их
     document.addEventListener('click', (e) => {
         if (!currencySelector.contains(e.target)) {
-            currencySelector.classList.remove('active');
+            closeCurrencyDropdown();
         }
         if (!addWalletModal.contains(e.target) && e.target !== addWalletBtn) {
             addWalletModal.classList.remove('active');
@@ -302,16 +306,37 @@ function setupEventListeners() {
 
 // Функции для работы с валютами
 function toggleCurrencyDropdown(e) {
-    e.stopPropagation();
+    if (e) e.stopPropagation();
+    
+    const availableCurrencies = getAvailableCurrencies();
+    if (availableCurrencies.length <= 1) {
+        return; // Не показываем dropdown если только одна валюта
+    }
+    
     currencySelector.classList.toggle('active');
 }
 
-function selectCurrency(currency) {
-    selectedCurrency = currency;
-    updateCurrencyDisplay();
+function closeCurrencyDropdown() {
     currencySelector.classList.remove('active');
-    updateTotalBalance();
-    saveWallets();
+}
+
+function selectCurrency(currency) {
+    // Анимация смены иконки
+    selectedCurrencyElement.classList.add('changing');
+    
+    setTimeout(() => {
+        selectedCurrency = currency;
+        updateCurrencyDisplay();
+        closeCurrencyDropdown();
+        updateTotalBalance();
+        updateCurrencyDropdown();
+        saveWallets();
+        
+        // Завершаем анимацию
+        setTimeout(() => {
+            selectedCurrencyElement.classList.remove('changing');
+        }, 100);
+    }, 150);
 }
 
 function updateCurrencyDisplay() {
