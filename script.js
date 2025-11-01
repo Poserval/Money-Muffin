@@ -56,7 +56,7 @@ const initialWallets = [
     {
         id: 1,
         name: "ДомРФ (вклад)",
-        amount: 1000000.50,
+        amount: 1000000,
         currency: "RUB",
         type: "deposit",
         lastUpdate: "2025-10-25",
@@ -89,7 +89,7 @@ const initialWallets = [
     {
         id: 4,
         name: "ВТБ (кредитка)",
-        amount: -25000.30,
+        amount: -25000,
         currency: "RUB",
         type: "credit",
         lastUpdate: "2025-10-25",
@@ -122,7 +122,7 @@ const initialWallets = [
 ];
 
 // Переменные для баланса
-let previousTotalBalance = 1025240.95;
+let previousTotalBalance = 1025240.85;
 let lastBalanceChange = -13767.45;
 let showBalanceChange = true;
 
@@ -884,8 +884,8 @@ function togglePinWallet(walletId) {
 function updateTotalBalance() {
     const totalBalance = getTotalBalanceInSelectedCurrency();
     
-    // Форматируем сумму с копейками
-    const formattedBalance = formatAmountWithDecimals(totalBalance, selectedCurrency);
+    // Форматируем сумму общего баланса (без знака валюты)
+    const formattedBalance = formatTotalBalance(totalBalance);
     
     // Обновляем отображение
     totalBalanceElement.textContent = formattedBalance;
@@ -894,10 +894,10 @@ function updateTotalBalance() {
     if (showBalanceChange && lastBalanceChange !== 0) {
         let changeText = '';
         if (lastBalanceChange > 0) {
-            changeText = `+${formatAmountWithDecimals(lastBalanceChange, selectedCurrency)}`;
+            changeText = `+${formatAmount(lastBalanceChange, selectedCurrency)}`;
             balanceChangeElement.className = 'balance-change positive';
         } else if (lastBalanceChange < 0) {
-            changeText = `${formatAmountWithDecimals(lastBalanceChange, selectedCurrency)}`;
+            changeText = `${formatAmount(lastBalanceChange, selectedCurrency)}`;
             balanceChangeElement.className = 'balance-change negative';
         }
         
@@ -964,7 +964,7 @@ function clearAllData() {
         localStorage.removeItem('moneyMuffinSelectedCurrency');
         
         wallets = [...initialWallets];
-        previousTotalBalance = 1025240.95;
+        previousTotalBalance = 1025240.85;
         lastBalanceChange = -13767.45;
         showBalanceChange = true;
         currentSort = 'amount';
@@ -991,10 +991,28 @@ function getCurrencyName(currency) {
     return currencyNames[currency] || currency;
 }
 
-// Форматирование суммы с десятичными знаками
-function formatAmountWithDecimals(amount, currency) {
-    // Определяем количество знаков после запятой в зависимости от валюты
-    const decimalPlaces = currency === 'JPY' ? 0 : 2; // Йены без копеек
+// Форматирование суммы общего баланса (без знака валюты)
+function formatTotalBalance(amount) {
+    // Проверяем, есть ли копейки
+    const hasDecimals = amount % 1 !== 0;
+    
+    // Форматируем число
+    const formatter = new Intl.NumberFormat('ru-RU', {
+        minimumFractionDigits: hasDecimals ? 2 : 0,
+        maximumFractionDigits: hasDecimals ? 2 : 0
+    });
+    
+    const formatted = formatter.format(Math.abs(amount));
+    return `${amount < 0 ? '-' : ''}${formatted}`;
+}
+
+// Форматирование суммы для кошельков и изменения баланса (с знаком валюты)
+function formatAmount(amount, currency) {
+    // Проверяем, есть ли копейки
+    const hasDecimals = amount % 1 !== 0;
+    
+    // Определяем количество знаков после запятой
+    const decimalPlaces = currency === 'JPY' ? 0 : (hasDecimals ? 2 : 0);
     
     // Форматируем число
     const formatter = new Intl.NumberFormat('ru-RU', {
@@ -1006,11 +1024,6 @@ function formatAmountWithDecimals(amount, currency) {
     const symbol = currencySymbols[currency] || currency;
     
     return `${amount < 0 ? '-' : ''}${formatted} ${symbol}`;
-}
-
-// Старая функция для обратной совместимости (в кошельках)
-function formatAmount(amount, currency) {
-    return formatAmountWithDecimals(amount, currency);
 }
 
 function formatDate(dateString) {
