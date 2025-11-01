@@ -212,8 +212,7 @@ body {
     color: #1d1d1f;
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    gap: 10px;
+    gap: 15px;
     background: white;
 }
 
@@ -221,6 +220,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex: 1;
 }
 
 .sort-buttons {
@@ -252,23 +252,24 @@ body {
 
 .sort-actions {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
+    margin-left: auto;
 }
 
 .action-btn {
     background: #f5f5f7;
     border: 1px solid #e5e5e7;
-    border-radius: 8px;
-    padding: 8px;
+    border-radius: 6px;
+    padding: 6px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px;
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 30px;
+    height: 30px;
 }
 
 .action-btn:hover {
@@ -619,6 +620,7 @@ body {
     
     .sort-actions {
         justify-content: center;
+        margin-left: 0;
     }
 }
 
@@ -646,5 +648,10 @@ body {
     .sort-buttons {
         align-self: stretch;
         justify-content: center;
+    }
+    
+    .sort-actions {
+        align-self: stretch;
+        justify-content: space-around;
     }
 }
