@@ -28,7 +28,7 @@ const confirmModal = document.getElementById('confirmModal');
 const confirmCancelBtn = document.getElementById('confirmCancelBtn');
 const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 
-// Начальные данные как на картинке
+// Начальные данные
 const initialWallets = [
     {
         id: 1,
@@ -92,7 +92,7 @@ const initialWallets = [
     }
 ];
 
-// Переменные для хранения данных о балансе
+// Переменные для баланса
 let previousTotalBalance = 1025240;
 let lastBalanceChange = -13767;
 let showBalanceChange = true;
@@ -149,25 +149,11 @@ function loadWallets() {
         const savedSort = localStorage.getItem('moneyMuffinSort');
         const savedSortDirection = localStorage.getItem('moneyMuffinSortDirection');
         
-        if (savedPreviousBalance) {
-            previousTotalBalance = parseFloat(savedPreviousBalance);
-        }
-        
-        if (savedLastChange) {
-            lastBalanceChange = parseFloat(savedLastChange);
-        }
-        
-        if (savedShowChange) {
-            showBalanceChange = JSON.parse(savedShowChange);
-        }
-        
-        if (savedSort) {
-            currentSort = savedSort;
-        }
-        
-        if (savedSortDirection) {
-            sortDirection = savedSortDirection;
-        }
+        if (savedPreviousBalance) previousTotalBalance = parseFloat(savedPreviousBalance);
+        if (savedLastChange) lastBalanceChange = parseFloat(savedLastChange);
+        if (savedShowChange) showBalanceChange = JSON.parse(savedShowChange);
+        if (savedSort) currentSort = savedSort;
+        if (savedSortDirection) sortDirection = savedSortDirection;
         
         if (savedWallets && JSON.parse(savedWallets).length > 0) {
             wallets = JSON.parse(savedWallets);
@@ -187,7 +173,7 @@ function loadWallets() {
     }
 }
 
-// Сохранение данных в LocalStorage
+// Сохранение данных
 function saveWallets() {
     localStorage.setItem('moneyMuffinWallets', JSON.stringify(wallets));
     localStorage.setItem('moneyMuffinPreviousBalance', previousTotalBalance.toString());
@@ -231,7 +217,6 @@ function setupEventListeners() {
     });
 
     resetChangeBtn.addEventListener('click', resetBalanceChange);
-    
     shareBtn.addEventListener('click', shareApp);
     clearAllBtn.addEventListener('click', showClearAllConfirmation);
     confirmCancelBtn.addEventListener('click', hideClearAllConfirmation);
@@ -244,7 +229,7 @@ function setupEventListeners() {
     });
 }
 
-// Обработка клика по кнопке сортировки
+// Обработка сортировки
 function handleSortClick(sortType) {
     if (currentSort === sortType) {
         sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
@@ -274,14 +259,14 @@ function updateSortButtons() {
     });
 }
 
-// Функция сброса изменения баланса
+// Сброс изменения баланса
 function resetBalanceChange() {
     lastBalanceChange = 0;
     showBalanceChange = false;
     updateTotalBalance();
 }
 
-// Обработка добавления кошелька
+// Добавление кошелька
 function handleAddWallet(e) {
     e.preventDefault();
     
@@ -333,7 +318,6 @@ function handleAddWallet(e) {
     
     addWalletModal.classList.remove('active');
     walletForm.reset();
-    
     alert('Кошелек создан');
     
     return false;
@@ -343,7 +327,6 @@ function handleAddWallet(e) {
 function setSort(sortType, direction) {
     currentSort = sortType;
     sortDirection = direction;
-    
     updateSortButtons();
     renderWallets();
 }
@@ -367,12 +350,17 @@ function renderWallets() {
 
     const groupedWallets = {
         'RUB': sortedWallets.filter(wallet => wallet.currency === 'RUB'),
-        'USD': sortedWallets.filter(wallet => wallet.currency === 'USD')
+        'USD': sortedWallets.filter(wallet => wallet.currency === 'USD'),
+        'EUR': sortedWallets.filter(wallet => wallet.currency === 'EUR'),
+        'CNY': sortedWallets.filter(wallet => wallet.currency === 'CNY'),
+        'JPY': sortedWallets.filter(wallet => wallet.currency === 'JPY')
     };
     
     walletsContainer.innerHTML = '';
 
-    for (const currency of ['RUB', 'USD']) {
+    const currencyOrder = ['RUB', 'USD', 'EUR', 'CNY', 'JPY'];
+    
+    for (const currency of currencyOrder) {
         const currencyWallets = groupedWallets[currency];
         if (currencyWallets.length > 0) {
             const currencySection = createCurrencySection(currency, currencyWallets);
@@ -381,7 +369,7 @@ function renderWallets() {
     }
 }
 
-// Создание секции для валюты
+// Создание секции валюты
 function createCurrencySection(currency, wallets) {
     const section = document.createElement('div');
     section.className = 'currency-section';
@@ -455,7 +443,7 @@ function createWalletElement(wallet) {
     return walletDiv;
 }
 
-// Функции для действий с кошельками
+// Действия с кошельками
 function deleteWallet(walletId) {
     if (confirm('Удалить этот кошелек?')) {
         const oldTotalBalance = wallets
@@ -541,9 +529,7 @@ function editWallet(walletId) {
         
         addWalletModal.classList.remove('active');
         walletForm.reset();
-        
         alert('Изменения внесены');
-        
         walletForm.onsubmit = handleAddWallet;
         
         return false;
@@ -618,7 +604,7 @@ function updateTotalBalance() {
     saveWallets();
 }
 
-// Функция поделиться приложением
+// Новые функции для кнопок действий
 function shareApp() {
     if (navigator.share) {
         navigator.share({
@@ -636,7 +622,6 @@ function shareApp() {
     }
 }
 
-// Фолбэк для браузеров без поддержки Web Share API
 function fallbackShare() {
     const url = window.location.href;
     if (navigator.clipboard) {
@@ -652,17 +637,14 @@ function fallbackShare() {
     }
 }
 
-// Показать подтверждение удаления
 function showClearAllConfirmation() {
     confirmModal.classList.add('active');
 }
 
-// Скрыть подтверждение удаления
 function hideClearAllConfirmation() {
     confirmModal.classList.remove('active');
 }
 
-// Полное удаление всех данных
 function clearAllData() {
     try {
         localStorage.removeItem('moneyMuffinWallets');
@@ -683,8 +665,8 @@ function clearAllData() {
         renderWallets();
         updateTotalBalance();
         updateSortButtons();
-        
         hideClearAllConfirmation();
+        
         alert('Все данные были успешно сброшены к начальному состоянию!');
         
     } catch (error) {
@@ -697,7 +679,10 @@ function clearAllData() {
 function getCurrencyName(currency) {
     const currencies = {
         'RUB': 'Рубль',
-        'USD': 'Доллар'
+        'USD': 'Доллар', 
+        'EUR': 'Евро',
+        'CNY': 'Юань',
+        'JPY': 'Йена'
     };
     return currencies[currency] || currency;
 }
@@ -705,8 +690,16 @@ function getCurrencyName(currency) {
 function formatAmount(amount, currency) {
     const formatter = new Intl.NumberFormat('ru-RU');
     const formatted = formatter.format(Math.abs(amount));
-    const symbol = currency === 'USD' ? '$' : '₽';
     
+    const symbols = {
+        'RUB': '₽',
+        'USD': '$',
+        'EUR': '€',
+        'CNY': '¥',
+        'JPY': '¥'
+    };
+    
+    const symbol = symbols[currency] || currency;
     return `${amount < 0 ? '-' : ''}${formatted} ${symbol}`;
 }
 
