@@ -213,7 +213,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    gap: 10px;
+    gap: 12px;
     background: white;
 }
 
@@ -221,6 +221,7 @@ body {
     display: flex;
     align-items: center;
     gap: 10px;
+    flex: 1;
 }
 
 .sort-buttons {
@@ -234,14 +235,15 @@ body {
 .sort-btn {
     background: none;
     border: none;
-    padding: 6px 12px;
+    padding: 5px 10px;
     border-radius: 6px;
-    font-size: 14px;
+    font-size: 13px;
     cursor: pointer;
     color: #86868b;
     white-space: nowrap;
     font-weight: 500;
     transition: all 0.2s ease;
+    min-width: 50px;
 }
 
 .sort-btn.active {
@@ -252,24 +254,26 @@ body {
 
 .sort-actions {
     display: flex;
-    gap: 8px;
+    gap: 6px;
     align-items: center;
+    flex-shrink: 0;
 }
 
 .action-btn {
     background: #f5f5f7;
     border: 1px solid #e5e5e7;
     border-radius: 8px;
-    padding: 8px;
+    padding: 6px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px;
     transition: all 0.2s ease;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 36px;
-    height: 36px;
+    width: 32px;
+    height: 32px;
     color: #1d1d1f;
+    flex-shrink: 0;
 }
 
 .action-btn:hover {
@@ -664,5 +668,17 @@ body {
     .wallets-grid {
         grid-template-columns: 1fr;
         gap: 8px;
+    }
+    
+    .sort-btn {
+        padding: 4px 8px;
+        font-size: 12px;
+        min-width: 45px;
+    }
+    
+    .action-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 13px;
     }
 }
