@@ -2,6 +2,25 @@
 let wallets = [];
 let currentSort = 'amount';
 let sortDirection = 'desc';
+let selectedCurrency = 'RUB';
+
+// Курсы валют (примерные)
+const exchangeRates = {
+    'RUB': 1,
+    'USD': 0.011, // 1 RUB = 0.011 USD
+    'EUR': 0.010, // 1 RUB = 0.010 EUR
+    'CNY': 0.079, // 1 RUB = 0.079 CNY
+    'JPY': 1.63   // 1 RUB = 1.63 JPY
+};
+
+// Символы валют
+const currencySymbols = {
+    'RUB': '₽',
+    'USD': '$',
+    'EUR': '€',
+    'CNY': '¥',
+    'JPY': '¥'
+};
 
 // Цвета радуги + черный и серый
 const walletColors = [
@@ -27,6 +46,10 @@ const clearAllBtn = document.getElementById('clearAllBtn');
 const confirmModal = document.getElementById('confirmModal');
 const confirmCancelBtn = document.getElementById('confirmCancelBtn');
 const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+const currencySelector = document.getElementById('currencySelector');
+const selectedCurrencyElement = document.getElementById('selectedCurrency');
+const currencyDropdown = document.getElementById('currencyDropdown');
+const currencyOptions = document.querySelectorAll('.currency-option');
 
 // Начальные данные
 const initialWallets = [
@@ -148,12 +171,14 @@ function loadWallets() {
         const savedShowChange = localStorage.getItem('moneyMuffinShowChange');
         const savedSort = localStorage.getItem('moneyMuffinSort');
         const savedSortDirection = localStorage.getItem('moneyMuffinSortDirection');
+        const savedCurrency = localStorage.getItem('moneyMuffinSelectedCurrency');
         
         if (savedPreviousBalance) previousTotalBalance = parseFloat(savedPreviousBalance);
         if (savedLastChange) lastBalanceChange = parseFloat(savedLastChange);
         if (savedShowChange) showBalanceChange = JSON.parse(savedShowChange);
         if (savedSort) currentSort = savedSort;
         if (savedSortDirection) sortDirection = savedSortDirection;
+        if (savedCurrency) selectedCurrency = savedCurrency;
         
         if (savedWallets && JSON.parse(savedWallets).length > 0) {
             wallets = JSON.parse(savedWallets);
@@ -162,12 +187,15 @@ function loadWallets() {
             saveWallets();
         }
         
+        // Устанавливаем выбранную валюту
+        updateCurrencyDisplay();
         updateSortButtons();
         renderWallets();
         updateTotalBalance();
     } catch (error) {
         console.error('Ошибка загрузки данных:', error);
         wallets = [...initialWallets];
+        updateCurrencyDisplay();
         renderWallets();
         updateTotalBalance();
     }
@@ -181,6 +209,7 @@ function saveWallets() {
     localStorage.setItem('moneyMuffinShowChange', JSON.stringify(showBalanceChange));
     localStorage.setItem('moneyMuffinSort', currentSort);
     localStorage.setItem('moneyMuffinSortDirection', sortDirection);
+    localStorage.setItem('moneyMuffinSelectedCurrency', selectedCurrency);
 }
 
 // Настройка обработчиков событий
@@ -222,11 +251,53 @@ function setupEventListeners() {
     confirmCancelBtn.addEventListener('click', hideClearAllConfirmation);
     confirmDeleteBtn.addEventListener('click', clearAllData);
     
+    // Обработчики для селектора валют
+    currencySelector.addEventListener('click', toggleCurrencyDropdown);
+    
+    currencyOptions.forEach(option => {
+        option.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const currency = option.dataset.currency;
+            selectCurrency(currency);
+        });
+    });
+    
+    // Закрытие выпадающих списков при клике вне их
+    document.addEventListener('click', (e) => {
+        if (!currencySelector.contains(e.target)) {
+            currencySelector.classList.remove('active');
+        }
+        if (!addWalletModal.contains(e.target) && e.target !== addWalletBtn) {
+            addWalletModal.classList.remove('active');
+        }
+        if (!confirmModal.contains(e.target) && e.target !== clearAllBtn) {
+            confirmModal.classList.remove('active');
+        }
+    });
+
     confirmModal.addEventListener('click', (e) => {
         if (e.target === confirmModal) {
             hideClearAllConfirmation();
         }
     });
+}
+
+// Функции для работы с валютами
+function toggleCurrencyDropdown(e) {
+    e.stopPropagation();
+    currencySelector.classList.toggle('active');
+}
+
+function selectCurrency(currency) {
+    selectedCurrency = currency;
+    updateCurrencyDisplay();
+    currencySelector.classList.remove('active');
+    updateTotalBalance();
+    saveWallets();
+}
+
+function updateCurrencyDisplay() {
+    selectedCurrencyElement.textContent = currencySymbols[selectedCurrency];
 }
 
 // Обработка сортировки
@@ -287,9 +358,7 @@ function handleAddWallet(e) {
         return false;
     }
 
-    const oldTotalBalance = wallets
-        .filter(wallet => wallet.currency === 'RUB')
-        .reduce((sum, wallet) => sum + wallet.amount, 0);
+    const oldTotalBalance = getTotalBalanceInRub();
 
     const newWallet = {
         id: Date.now(),
@@ -304,9 +373,7 @@ function handleAddWallet(e) {
 
     wallets.push(newWallet);
     
-    const newTotalBalance = wallets
-        .filter(wallet => wallet.currency === 'RUB')
-        .reduce((sum, wallet) => sum + wallet.amount, 0);
+    const newTotalBalance = getTotalBalanceInRub();
     
     lastBalanceChange = newTotalBalance - oldTotalBalance;
     previousTotalBalance = oldTotalBalance;
@@ -321,6 +388,19 @@ function handleAddWallet(e) {
     alert('Кошелек создан');
     
     return false;
+}
+
+// Получение общего баланса в рублях
+function getTotalBalanceInRub() {
+    return wallets.reduce((sum, wallet) => {
+        if (wallet.currency === 'RUB') {
+            return sum + wallet.amount;
+        } else {
+            // Конвертируем другие валюты в рубли
+            const rate = 1 / exchangeRates[wallet.currency];
+            return sum + (wallet.amount * rate);
+        }
+    }, 0);
 }
 
 // Установка сортировки
@@ -446,15 +526,11 @@ function createWalletElement(wallet) {
 // Действия с кошельками
 function deleteWallet(walletId) {
     if (confirm('Удалить этот кошелек?')) {
-        const oldTotalBalance = wallets
-            .filter(wallet => wallet.currency === 'RUB')
-            .reduce((sum, wallet) => sum + wallet.amount, 0);
+        const oldTotalBalance = getTotalBalanceInRub();
 
         wallets = wallets.filter(wallet => wallet.id !== walletId);
         
-        const newTotalBalance = wallets
-            .filter(wallet => wallet.currency === 'RUB')
-            .reduce((sum, wallet) => sum + wallet.amount, 0);
+        const newTotalBalance = getTotalBalanceInRub();
         
         lastBalanceChange = newTotalBalance - oldTotalBalance;
         previousTotalBalance = oldTotalBalance;
@@ -504,9 +580,7 @@ function editWallet(walletId) {
             return false;
         }
 
-        const oldTotalBalance = wallets
-            .filter(wallet => wallet.currency === 'RUB')
-            .reduce((sum, wallet) => sum + wallet.amount, 0);
+        const oldTotalBalance = getTotalBalanceInRub();
         
         wallet.name = name;
         wallet.amount = amount;
@@ -515,9 +589,7 @@ function editWallet(walletId) {
         wallet.color = color;
         wallet.lastUpdate = new Date().toISOString().split('T')[0];
         
-        const newTotalBalance = wallets
-            .filter(wallet => wallet.currency === 'RUB')
-            .reduce((sum, wallet) => sum + wallet.amount, 0);
+        const newTotalBalance = getTotalBalanceInRub();
         
         lastBalanceChange = newTotalBalance - oldTotalBalance;
         previousTotalBalance = oldTotalBalance;
@@ -539,9 +611,7 @@ function editWallet(walletId) {
 function copyWallet(walletId) {
     const wallet = wallets.find(w => w.id === walletId);
     if (wallet) {
-        const oldTotalBalance = wallets
-            .filter(wallet => wallet.currency === 'RUB')
-            .reduce((sum, wallet) => sum + wallet.amount, 0);
+        const oldTotalBalance = getTotalBalanceInRub();
 
         const copiedWallet = {
             ...wallet,
@@ -551,9 +621,7 @@ function copyWallet(walletId) {
         };
         wallets.push(copiedWallet);
         
-        const newTotalBalance = wallets
-            .filter(wallet => wallet.currency === 'RUB')
-            .reduce((sum, wallet) => sum + wallet.amount, 0);
+        const newTotalBalance = getTotalBalanceInRub();
         
         lastBalanceChange = newTotalBalance - oldTotalBalance;
         previousTotalBalance = oldTotalBalance;
@@ -577,12 +645,19 @@ function togglePinWallet(walletId) {
 
 // Обновление общего баланса
 function updateTotalBalance() {
-    const totalRub = wallets
-        .filter(wallet => wallet.currency === 'RUB')
-        .reduce((sum, wallet) => sum + wallet.amount, 0);
-
-    totalBalanceElement.textContent = formatAmount(totalRub, 'RUB');
+    const totalRub = getTotalBalanceInRub();
     
+    // Конвертируем в выбранную валюту
+    const convertedBalance = totalRub * exchangeRates[selectedCurrency];
+    
+    // Форматируем сумму
+    const formatter = new Intl.NumberFormat('ru-RU');
+    const formattedBalance = formatter.format(Math.round(convertedBalance));
+    
+    // Обновляем отображение
+    totalBalanceElement.textContent = formattedBalance;
+    
+    // Обновляем изменение баланса (оставляем в рублях для ясности)
     if (showBalanceChange && lastBalanceChange !== 0) {
         let changeText = '';
         if (lastBalanceChange > 0) {
@@ -653,6 +728,7 @@ function clearAllData() {
         localStorage.removeItem('moneyMuffinShowChange');
         localStorage.removeItem('moneyMuffinSort');
         localStorage.removeItem('moneyMuffinSortDirection');
+        localStorage.removeItem('moneyMuffinSelectedCurrency');
         
         wallets = [...initialWallets];
         previousTotalBalance = 1025240;
@@ -660,7 +736,9 @@ function clearAllData() {
         showBalanceChange = true;
         currentSort = 'amount';
         sortDirection = 'desc';
+        selectedCurrency = 'RUB';
         
+        updateCurrencyDisplay();
         saveWallets();
         renderWallets();
         updateTotalBalance();
@@ -690,16 +768,8 @@ function getCurrencyName(currency) {
 function formatAmount(amount, currency) {
     const formatter = new Intl.NumberFormat('ru-RU');
     const formatted = formatter.format(Math.abs(amount));
+    const symbol = currencySymbols[currency] || currency;
     
-    const symbols = {
-        'RUB': '₽',
-        'USD': '$',
-        'EUR': '€',
-        'CNY': '¥',
-        'JPY': '¥'
-    };
-    
-    const symbol = symbols[currency] || currency;
     return `${amount < 0 ? '-' : ''}${formatted} ${symbol}`;
 }
 
