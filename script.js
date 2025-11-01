@@ -618,21 +618,15 @@ function setupDragAndDrop(walletElement, walletId) {
         const targetWalletId = walletElement.dataset.walletId;
         if (targetWalletId == draggedWalletId) return;
         
-        // Находим индексы в рамках одной валюты
-        const currency = walletElement.dataset.currency;
+        // Находим кошельки
         const draggedWallet = wallets.find(w => w.id == draggedWalletId);
+        const targetWallet = wallets.find(w => w.id == targetWalletId);
         
         // Проверяем, что кошельки в одной валюте
-        if (draggedWallet.currency !== currency) return;
+        if (!draggedWallet || !targetWallet || draggedWallet.currency !== targetWallet.currency) return;
         
-        const currencyWallets = wallets.filter(w => w.currency === currency && !w.pinned);
-        const dragStartIndex = currencyWallets.findIndex(w => w.id == draggedWalletId);
-        const dragOverIndex = currencyWallets.findIndex(w => w.id == targetWalletId);
-        
-        if (dragStartIndex !== -1 && dragOverIndex !== -1) {
-            // Перемещаем кошелек в массиве
-            moveWalletInArray(draggedWalletId, currency, dragStartIndex, dragOverIndex);
-        }
+        // Перемещаем кошелек
+        moveWalletInArray(draggedWalletId, targetWalletId);
     });
 
     // Конец перетаскивания
@@ -698,17 +692,11 @@ function setupDragAndDrop(walletElement, walletId) {
             
             if (targetWallet) {
                 const targetWalletId = targetWallet.dataset.walletId;
-                const currency = targetWallet.dataset.currency;
                 const draggedWallet = wallets.find(w => w.id == draggedWalletId);
+                const targetWalletObj = wallets.find(w => w.id == targetWalletId);
                 
-                if (draggedWallet.currency === currency) {
-                    const currencyWallets = wallets.filter(w => w.currency === currency && !w.pinned);
-                    const dragStartIndex = currencyWallets.findIndex(w => w.id == draggedWalletId);
-                    const dragOverIndex = currencyWallets.findIndex(w => w.id == targetWalletId);
-                    
-                    if (dragStartIndex !== -1 && dragOverIndex !== -1) {
-                        moveWalletInArray(draggedWalletId, currency, dragStartIndex, dragOverIndex);
-                    }
+                if (draggedWallet && targetWalletObj && draggedWallet.currency === targetWalletObj.currency) {
+                    moveWalletInArray(draggedWalletId, targetWalletId);
                 }
             }
             
@@ -723,30 +711,16 @@ function setupDragAndDrop(walletElement, walletId) {
     });
 }
 
-// Перемещение кошелька в массиве (простая и надежная версия)
-function moveWalletInArray(walletId, currency, fromIndex, toIndex) {
-    // Находим индексы в основном массиве wallets
-    const currencyWallets = wallets.filter(w => w.currency === currency && !w.pinned);
-    const pinnedCount = wallets.filter(w => w.currency === currency && w.pinned).length;
+// Перемещение кошелька в массиве (исправленная версия)
+function moveWalletInArray(draggedWalletId, targetWalletId) {
+    const draggedIndex = wallets.findIndex(w => w.id == draggedWalletId);
+    const targetIndex = wallets.findIndex(w => w.id == targetWalletId);
     
-    // Вычисляем реальные индексы в основном массиве
-    const realFromIndex = pinnedCount + fromIndex;
-    const realToIndex = pinnedCount + toIndex;
+    if (draggedIndex === -1 || targetIndex === -1) return;
     
-    // Находим кошелек
-    const walletIndex = wallets.findIndex(w => w.id == walletId && w.currency === currency);
-    if (walletIndex === -1) return;
-    
-    // Перемещаем кошелек в основном массиве
-    const [movedWallet] = wallets.splice(walletIndex, 1);
-    
-    // Вставляем на новую позицию
-    let insertIndex = realToIndex;
-    if (realToIndex > walletIndex) {
-        insertIndex--; // Корректируем индекс, т.к. элемент уже удален
-    }
-    
-    wallets.splice(insertIndex, 0, movedWallet);
+    // Перемещаем кошелек
+    const [movedWallet] = wallets.splice(draggedIndex, 1);
+    wallets.splice(targetIndex, 0, movedWallet);
     
     saveWallets();
     renderWallets();
