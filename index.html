@@ -17,7 +17,19 @@
                 <div class="total-balance">
                     <div class="balance-label">Общий баланс</div>
                     <div class="balance-right">
-                        <div class="balance-amount" id="totalBalance">1 025 240 ₽</div>
+                        <div class="balance-amount-container">
+                            <div class="balance-amount" id="totalBalance">1 025 240</div>
+                            <div class="currency-selector" id="currencySelector">
+                                <div class="selected-currency" id="selectedCurrency">₽</div>
+                                <div class="currency-dropdown" id="currencyDropdown">
+                                    <div class="currency-option" data-currency="RUB">₽ Рубль</div>
+                                    <div class="currency-option" data-currency="USD">$ Доллар</div>
+                                    <div class="currency-option" data-currency="EUR">€ Евро</div>
+                                    <div class="currency-option" data-currency="CNY">¥ Юань</div>
+                                    <div class="currency-option" data-currency="JPY">¥ Йена</div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="balance-change-container">
                             <div class="balance-change" id="balanceChange">-13 767 ₽</div>
                             <button class="reset-change-btn" id="resetChangeBtn" title="Сбросить изменение">↺</button>
