@@ -121,10 +121,30 @@ const initialWallets = [
     }
 ];
 
-// Переменные для баланса
-let previousTotalBalance = 1025240.85;
-let lastBalanceChange = -13767.45;
-let showBalanceChange = true;
+// Переменные для баланса - теперь для каждой валюты отдельно
+let previousBalances = {
+    'RUB': 1025240.85,
+    'USD': 0,
+    'EUR': 0,
+    'CNY': 0,
+    'JPY': 0
+};
+
+let balanceChanges = {
+    'RUB': -13767.45,
+    'USD': 0,
+    'EUR': 0,
+    'CNY': 0,
+    'JPY': 0
+};
+
+let showBalanceChanges = {
+    'RUB': true,
+    'USD': false,
+    'EUR': false,
+    'CNY': false,
+    'JPY': false
+};
 
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', function() {
@@ -181,16 +201,16 @@ function getAvailableCurrencies() {
 function loadWallets() {
     try {
         const savedWallets = localStorage.getItem('moneyMuffinWallets');
-        const savedPreviousBalance = localStorage.getItem('moneyMuffinPreviousBalance');
-        const savedLastChange = localStorage.getItem('moneyMuffinLastChange');
-        const savedShowChange = localStorage.getItem('moneyMuffinShowChange');
+        const savedPreviousBalances = localStorage.getItem('moneyMuffinPreviousBalances');
+        const savedBalanceChanges = localStorage.getItem('moneyMuffinBalanceChanges');
+        const savedShowChanges = localStorage.getItem('moneyMuffinShowChanges');
         const savedSort = localStorage.getItem('moneyMuffinSort');
         const savedSortDirection = localStorage.getItem('moneyMuffinSortDirection');
         const savedCurrency = localStorage.getItem('moneyMuffinSelectedCurrency');
         
-        if (savedPreviousBalance) previousTotalBalance = parseFloat(savedPreviousBalance);
-        if (savedLastChange) lastBalanceChange = parseFloat(savedLastChange);
-        if (savedShowChange) showBalanceChange = JSON.parse(savedShowChange);
+        if (savedPreviousBalances) previousBalances = JSON.parse(savedPreviousBalances);
+        if (savedBalanceChanges) balanceChanges = JSON.parse(savedBalanceChanges);
+        if (savedShowChanges) showBalanceChanges = JSON.parse(savedShowChanges);
         if (savedSort) currentSort = savedSort;
         if (savedSortDirection) sortDirection = savedSortDirection;
         if (savedCurrency) selectedCurrency = savedCurrency;
@@ -199,6 +219,8 @@ function loadWallets() {
             wallets = JSON.parse(savedWallets);
         } else {
             wallets = [...initialWallets];
+            // Инициализируем предыдущие балансы на основе начальных данных
+            initializePreviousBalances();
             saveWallets();
         }
         
@@ -215,18 +237,33 @@ function loadWallets() {
     } catch (error) {
         console.error('Ошибка загрузки данных:', error);
         wallets = [...initialWallets];
+        initializePreviousBalances();
         updateCurrencyDisplay();
         renderWallets();
         updateTotalBalance();
     }
 }
 
+// Инициализация предыдущих балансов
+function initializePreviousBalances() {
+    const availableCurrencies = getAvailableCurrencies();
+    availableCurrencies.forEach(currency => {
+        const currentBalance = getTotalBalanceInCurrency(currency);
+        previousBalances[currency] = currentBalance;
+        balanceChanges[currency] = 0;
+        showBalanceChanges[currency] = false;
+    });
+    // Для рубля устанавливаем начальное изменение
+    balanceChanges['RUB'] = -13767.45;
+    showBalanceChanges['RUB'] = true;
+}
+
 // Сохранение данных
 function saveWallets() {
     localStorage.setItem('moneyMuffinWallets', JSON.stringify(wallets));
-    localStorage.setItem('moneyMuffinPreviousBalance', previousTotalBalance.toString());
-    localStorage.setItem('moneyMuffinLastChange', lastBalanceChange.toString());
-    localStorage.setItem('moneyMuffinShowChange', JSON.stringify(showBalanceChange));
+    localStorage.setItem('moneyMuffinPreviousBalances', JSON.stringify(previousBalances));
+    localStorage.setItem('moneyMuffinBalanceChanges', JSON.stringify(balanceChanges));
+    localStorage.setItem('moneyMuffinShowChanges', JSON.stringify(showBalanceChanges));
     localStorage.setItem('moneyMuffinSort', currentSort);
     localStorage.setItem('moneyMuffinSortDirection', sortDirection);
     localStorage.setItem('moneyMuffinSelectedCurrency', selectedCurrency);
@@ -356,10 +393,10 @@ function updateSortButtons() {
     });
 }
 
-// Сброс изменения баланса
+// Сброс изменения баланса для текущей валюты
 function resetBalanceChange() {
-    lastBalanceChange = 0;
-    showBalanceChange = false;
+    balanceChanges[selectedCurrency] = 0;
+    showBalanceChanges[selectedCurrency] = false;
     updateTotalBalance();
 }
 
@@ -384,7 +421,8 @@ function handleAddWallet(e) {
         return false;
     }
 
-    const oldTotalBalance = getTotalBalanceInSelectedCurrency();
+    // Сохраняем предыдущий баланс для валюты нового кошелька
+    const oldBalance = getTotalBalanceInCurrency(currency);
 
     // Находим максимальный order для новой валюты
     const maxOrder = wallets
@@ -405,11 +443,13 @@ function handleAddWallet(e) {
 
     wallets.push(newWallet);
     
-    const newTotalBalance = getTotalBalanceInSelectedCurrency();
+    // Рассчитываем изменение для валюты нового кошелька
+    const newBalance = getTotalBalanceInCurrency(currency);
+    const change = newBalance - oldBalance;
     
-    lastBalanceChange = newTotalBalance - oldTotalBalance;
-    previousTotalBalance = oldTotalBalance;
-    showBalanceChange = lastBalanceChange !== 0;
+    // Обновляем данные изменения для этой валюты
+    balanceChanges[currency] = change;
+    showBalanceChanges[currency] = change !== 0;
     
     saveWallets();
     renderWallets();
@@ -422,11 +462,16 @@ function handleAddWallet(e) {
     return false;
 }
 
+// Получение общего баланса в конкретной валюте
+function getTotalBalanceInCurrency(currency) {
+    return wallets
+        .filter(wallet => wallet.currency === currency)
+        .reduce((sum, wallet) => sum + wallet.amount, 0);
+}
+
 // Получение общего баланса в выбранной валюте
 function getTotalBalanceInSelectedCurrency() {
-    return wallets
-        .filter(wallet => wallet.currency === selectedCurrency)
-        .reduce((sum, wallet) => sum + wallet.amount, 0);
+    return getTotalBalanceInCurrency(selectedCurrency);
 }
 
 // Установка сортировки
@@ -757,15 +802,20 @@ function moveWalletInArray(draggedWalletId, targetWalletId) {
 // Действия с кошельками
 function deleteWallet(walletId) {
     if (confirm('Удалить этот кошелек?')) {
-        const oldTotalBalance = getTotalBalanceInSelectedCurrency();
+        const wallet = wallets.find(w => w.id === walletId);
+        if (!wallet) return;
+
+        const currency = wallet.currency;
+        const oldBalance = getTotalBalanceInCurrency(currency);
 
         wallets = wallets.filter(wallet => wallet.id !== walletId);
         
-        const newTotalBalance = getTotalBalanceInSelectedCurrency();
+        const newBalance = getTotalBalanceInCurrency(currency);
+        const change = newBalance - oldBalance;
         
-        lastBalanceChange = newTotalBalance - oldTotalBalance;
-        previousTotalBalance = oldTotalBalance;
-        showBalanceChange = lastBalanceChange !== 0;
+        // Обновляем изменение для валюты удаленного кошелька
+        balanceChanges[currency] = change;
+        showBalanceChanges[currency] = change !== 0;
         
         saveWallets();
         renderWallets();
@@ -811,7 +861,7 @@ function editWallet(walletId) {
             return false;
         }
 
-        const oldTotalBalance = getTotalBalanceInSelectedCurrency();
+        const oldBalance = getTotalBalanceInCurrency(currency);
         
         wallet.name = name;
         wallet.amount = amount;
@@ -820,11 +870,12 @@ function editWallet(walletId) {
         wallet.color = color;
         wallet.lastUpdate = new Date().toISOString().split('T')[0];
         
-        const newTotalBalance = getTotalBalanceInSelectedCurrency();
+        const newBalance = getTotalBalanceInCurrency(currency);
+        const change = newBalance - oldBalance;
         
-        lastBalanceChange = newTotalBalance - oldTotalBalance;
-        previousTotalBalance = oldTotalBalance;
-        showBalanceChange = lastBalanceChange !== 0;
+        // Обновляем изменение для валюты измененного кошелька
+        balanceChanges[currency] = change;
+        showBalanceChanges[currency] = change !== 0;
         
         saveWallets();
         renderWallets();
@@ -842,11 +893,12 @@ function editWallet(walletId) {
 function copyWallet(walletId) {
     const wallet = wallets.find(w => w.id === walletId);
     if (wallet) {
-        const oldTotalBalance = getTotalBalanceInSelectedCurrency();
+        const currency = wallet.currency;
+        const oldBalance = getTotalBalanceInCurrency(currency);
 
         // Находим максимальный order для валюты
         const maxOrder = wallets
-            .filter(w => w.currency === wallet.currency)
+            .filter(w => w.currency === currency)
             .reduce((max, w) => Math.max(max, w.order), 0);
 
         const copiedWallet = {
@@ -858,11 +910,12 @@ function copyWallet(walletId) {
         };
         wallets.push(copiedWallet);
         
-        const newTotalBalance = getTotalBalanceInSelectedCurrency();
+        const newBalance = getTotalBalanceInCurrency(currency);
+        const change = newBalance - oldBalance;
         
-        lastBalanceChange = newTotalBalance - oldTotalBalance;
-        previousTotalBalance = oldTotalBalance;
-        showBalanceChange = lastBalanceChange !== 0;
+        // Обновляем изменение для валюты скопированного кошелька
+        balanceChanges[currency] = change;
+        showBalanceChanges[currency] = change !== 0;
         
         saveWallets();
         renderWallets();
@@ -890,14 +943,17 @@ function updateTotalBalance() {
     // Обновляем отображение
     totalBalanceElement.textContent = formattedBalance;
     
-    // Обновляем изменение баланса
-    if (showBalanceChange && lastBalanceChange !== 0) {
+    // Обновляем изменение баланса для текущей валюты
+    const showChange = showBalanceChanges[selectedCurrency];
+    const balanceChange = balanceChanges[selectedCurrency];
+    
+    if (showChange && balanceChange !== 0) {
         let changeText = '';
-        if (lastBalanceChange > 0) {
-            changeText = `+${formatAmount(lastBalanceChange, selectedCurrency)}`;
+        if (balanceChange > 0) {
+            changeText = `+${formatAmount(balanceChange, selectedCurrency)}`;
             balanceChangeElement.className = 'balance-change positive';
-        } else if (lastBalanceChange < 0) {
-            changeText = `${formatAmount(lastBalanceChange, selectedCurrency)}`;
+        } else if (balanceChange < 0) {
+            changeText = `${formatAmount(balanceChange, selectedCurrency)}`;
             balanceChangeElement.className = 'balance-change negative';
         }
         
@@ -956,17 +1012,15 @@ function hideClearAllConfirmation() {
 function clearAllData() {
     try {
         localStorage.removeItem('moneyMuffinWallets');
-        localStorage.removeItem('moneyMuffinPreviousBalance');
-        localStorage.removeItem('moneyMuffinLastChange');
-        localStorage.removeItem('moneyMuffinShowChange');
+        localStorage.removeItem('moneyMuffinPreviousBalances');
+        localStorage.removeItem('moneyMuffinBalanceChanges');
+        localStorage.removeItem('moneyMuffinShowChanges');
         localStorage.removeItem('moneyMuffinSort');
         localStorage.removeItem('moneyMuffinSortDirection');
         localStorage.removeItem('moneyMuffinSelectedCurrency');
         
         wallets = [...initialWallets];
-        previousTotalBalance = 1025240.85;
-        lastBalanceChange = -13767.45;
-        showBalanceChange = true;
+        initializePreviousBalances();
         currentSort = 'amount';
         sortDirection = 'desc';
         selectedCurrency = 'RUB';
