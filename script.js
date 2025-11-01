@@ -1,11 +1,13 @@
 // Данные приложения
 let wallets = [];
 let currentSort = 'amount';
+let sortDirection = 'desc'; // 'asc' или 'desc'
 
 // Цвета радуги + черный и серый
 const walletColors = [
     '#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF', '#5856D6',
-    '#FF2D55', '#AF52DE', '#8E8E93'
+    '#FF2D55', '#AF52DE', '#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FAA',
+    '#007AFF', '#5856D6', '#1D1D1F', '#8E8E93'
 ];
 
 // DOM элементы
@@ -138,6 +140,8 @@ function loadWallets() {
         const savedPreviousBalance = localStorage.getItem('moneyMuffinPreviousBalance');
         const savedLastChange = localStorage.getItem('moneyMuffinLastChange');
         const savedShowChange = localStorage.getItem('moneyMuffinShowChange');
+        const savedSort = localStorage.getItem('moneyMuffinSort');
+        const savedSortDirection = localStorage.getItem('moneyMuffinSortDirection');
         
         if (savedPreviousBalance) {
             previousTotalBalance = parseFloat(savedPreviousBalance);
@@ -151,6 +155,14 @@ function loadWallets() {
             showBalanceChange = JSON.parse(savedShowChange);
         }
         
+        if (savedSort) {
+            currentSort = savedSort;
+        }
+        
+        if (savedSortDirection) {
+            sortDirection = savedSortDirection;
+        }
+        
         if (savedWallets && JSON.parse(savedWallets).length > 0) {
             wallets = JSON.parse(savedWallets);
         } else {
@@ -158,6 +170,7 @@ function loadWallets() {
             saveWallets();
         }
         
+        updateSortButtons();
         renderWallets();
         updateTotalBalance();
     } catch (error) {
@@ -174,6 +187,8 @@ function saveWallets() {
     localStorage.setItem('moneyMuffinPreviousBalance', previousTotalBalance.toString());
     localStorage.setItem('moneyMuffinLastChange', lastBalanceChange.toString());
     localStorage.setItem('moneyMuffinShowChange', JSON.stringify(showBalanceChange));
+    localStorage.setItem('moneyMuffinSort', currentSort);
+    localStorage.setItem('moneyMuffinSortDirection', sortDirection);
 }
 
 // Настройка обработчиков событий
@@ -198,7 +213,7 @@ function setupEventListeners() {
     sortButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const sortType = btn.dataset.sort;
-            setSort(sortType);
+            handleSortClick(sortType);
         });
     });
 
@@ -210,6 +225,39 @@ function setupEventListeners() {
     });
 
     resetChangeBtn.addEventListener('click', resetBalanceChange);
+}
+
+// Обработка клика по кнопке сортировки
+function handleSortClick(sortType) {
+    if (currentSort === sortType) {
+        // Меняем направление сортировки
+        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+        // Меняем тип сортировки, направление по умолчанию
+        currentSort = sortType;
+        sortDirection = sortType === 'name' ? 'asc' : 'desc';
+    }
+    
+    setSort(currentSort, sortDirection);
+}
+
+// Обновление кнопок сортировки
+function updateSortButtons() {
+    sortButtons.forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.dataset.sort === currentSort) {
+            btn.classList.add('active');
+        }
+        
+        // Обновляем текст кнопок с стрелками
+        if (btn.dataset.sort === 'name') {
+            btn.textContent = currentSort === 'name' ? 
+                (sortDirection === 'asc' ? 'Имя ▲' : 'Имя ▼') : 'Имя';
+        } else if (btn.dataset.sort === 'amount') {
+            btn.textContent = currentSort === 'amount' ? 
+                (sortDirection === 'asc' ? 'Сумма ▲' : 'Сумма ▼') : 'Сумма';
+        }
+    });
 }
 
 // Функция сброса изменения баланса
@@ -284,16 +332,11 @@ function handleAddWallet(e) {
 }
 
 // Установка сортировки
-function setSort(sortType) {
+function setSort(sortType, direction) {
     currentSort = sortType;
+    sortDirection = direction;
     
-    sortButtons.forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.sort === sortType);
-        if (btn.dataset.sort === 'amount') {
-            btn.textContent = sortType === 'amount' ? 'Сумма ▼' : 'Сумма';
-        }
-    });
-
+    updateSortButtons();
     renderWallets();
 }
 
@@ -304,11 +347,16 @@ function renderWallets() {
         if (a.pinned && !b.pinned) return -1;
         if (!a.pinned && b.pinned) return 1;
         
+        let result = 0;
+        
         if (currentSort === 'name') {
-            return a.name.localeCompare(b.name);
+            result = a.name.localeCompare(b.name);
         } else {
-            return b.amount - a.amount;
+            result = a.amount - b.amount;
         }
+        
+        // Применяем направление сортировки
+        return sortDirection === 'asc' ? result : -result;
     });
 
     const groupedWallets = {
