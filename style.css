@@ -9,6 +9,7 @@ body {
     background: #f5f5f7;
     color: #1d1d1f;
     line-height: 1.4;
+    touch-action: pan-y;
 }
 
 .container {
@@ -446,6 +447,7 @@ body {
     gap: 12px;
     padding: 12px;
     background: #f5f5f7;
+    transition: all 0.3s ease;
 }
 
 .wallet-item {
@@ -461,11 +463,44 @@ body {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     transition: all 0.3s ease;
     cursor: pointer;
+    user-select: none;
+    touch-action: pan-x pan-y;
 }
 
 .wallet-item:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.wallet-item.pinned {
+    background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+    border-color: #007aff;
+}
+
+.wallet-item.dragging {
+    opacity: 0.7;
+    transform: scale(1.02) rotate(2deg);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
+    z-index: 100;
+    cursor: grabbing !important;
+}
+
+.wallet-item.drag-over {
+    border: 2px dashed #007aff;
+    background: rgba(0, 122, 255, 0.05);
+    transform: scale(1.01);
+}
+
+.wallet-item:not([draggable]) {
+    cursor: default;
+}
+
+.wallet-item[draggable="true"] {
+    cursor: grab;
+}
+
+.wallet-item[draggable="true"]:active {
+    cursor: grabbing;
 }
 
 .wallet-item::before {
@@ -757,6 +792,10 @@ body {
         gap: 5px;
         margin-right: 6px;
     }
+    
+    .wallet-item.dragging {
+        transition: transform 0.1s ease;
+    }
 }
 
 @media (max-width: 380px) {
@@ -809,5 +848,13 @@ body {
     .currency-dropdown {
         gap: 4px;
         margin-right: 5px;
+    }
+    
+    .wallet-item {
+        min-height: 85px;
+    }
+    
+    .wallet-content {
+        min-height: 65px;
     }
 }
