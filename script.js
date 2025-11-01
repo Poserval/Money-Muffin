@@ -1,12 +1,12 @@
 // Данные приложения
 let wallets = [];
 let currentSort = 'amount';
-let sortDirection = 'desc'; // 'asc' или 'desc'
+let sortDirection = 'desc';
 
 // Цвета радуги + черный и серый
 const walletColors = [
     '#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF', '#5856D6',
-    '#FF2D55', '#AF52DE', '#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FAA',
+    '#FF2D55', '#AF52DE', '#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA',
     '#007AFF', '#5856D6', '#1D1D1F', '#8E8E93'
 ];
 
@@ -21,6 +21,12 @@ const totalBalanceElement = document.getElementById('totalBalance');
 const balanceChangeElement = document.getElementById('balanceChange');
 const colorOptions = document.getElementById('colorOptions');
 const resetChangeBtn = document.getElementById('resetChangeBtn');
+const shareBtn = document.getElementById('shareBtn');
+const installBtn = document.getElementById('installBtn');
+const clearAllBtn = document.getElementById('clearAllBtn');
+const confirmModal = document.getElementById('confirmModal');
+const confirmCancelBtn = document.getElementById('confirmCancelBtn');
+const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 
 // Начальные данные как на картинке
 const initialWallets = [
@@ -225,15 +231,24 @@ function setupEventListeners() {
     });
 
     resetChangeBtn.addEventListener('click', resetBalanceChange);
+    
+    shareBtn.addEventListener('click', shareApp);
+    clearAllBtn.addEventListener('click', showClearAllConfirmation);
+    confirmCancelBtn.addEventListener('click', hideClearAllConfirmation);
+    confirmDeleteBtn.addEventListener('click', clearAllData);
+    
+    confirmModal.addEventListener('click', (e) => {
+        if (e.target === confirmModal) {
+            hideClearAllConfirmation();
+        }
+    });
 }
 
 // Обработка клика по кнопке сортировки
 function handleSortClick(sortType) {
     if (currentSort === sortType) {
-        // Меняем направление сортировки
         sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
     } else {
-        // Меняем тип сортировки, направление по умолчанию
         currentSort = sortType;
         sortDirection = sortType === 'name' ? 'asc' : 'desc';
     }
@@ -249,7 +264,6 @@ function updateSortButtons() {
             btn.classList.add('active');
         }
         
-        // Обновляем текст кнопок с стрелками
         if (btn.dataset.sort === 'name') {
             btn.textContent = currentSort === 'name' ? 
                 (sortDirection === 'asc' ? 'Имя ▲' : 'Имя ▼') : 'Имя';
@@ -277,7 +291,6 @@ function handleAddWallet(e) {
     const type = document.getElementById('walletType').value;
     const color = getSelectedColor();
 
-    // Простая валидация
     if (amountInput.trim() === '') {
         alert('Пожалуйста, введите сумму');
         return false;
@@ -289,7 +302,6 @@ function handleAddWallet(e) {
         return false;
     }
 
-    // Сохраняем текущий баланс ДО добавления кошелька
     const oldTotalBalance = wallets
         .filter(wallet => wallet.currency === 'RUB')
         .reduce((sum, wallet) => sum + wallet.amount, 0);
@@ -307,16 +319,12 @@ function handleAddWallet(e) {
 
     wallets.push(newWallet);
     
-    // Вычисляем новый баланс ПОСЛЕ добавления кошелька
     const newTotalBalance = wallets
         .filter(wallet => wallet.currency === 'RUB')
         .reduce((sum, wallet) => sum + wallet.amount, 0);
     
-    // Вычисляем изменение баланса
     lastBalanceChange = newTotalBalance - oldTotalBalance;
     previousTotalBalance = oldTotalBalance;
-    
-    // Показываем изменение только если оно не равно нулю
     showBalanceChange = lastBalanceChange !== 0;
     
     saveWallets();
@@ -343,7 +351,6 @@ function setSort(sortType, direction) {
 // Отображение кошельков
 function renderWallets() {
     const sortedWallets = [...wallets].sort((a, b) => {
-        // Сначала закрепленные кошельки
         if (a.pinned && !b.pinned) return -1;
         if (!a.pinned && b.pinned) return 1;
         
@@ -355,7 +362,6 @@ function renderWallets() {
             result = a.amount - b.amount;
         }
         
-        // Применяем направление сортировки
         return sortDirection === 'asc' ? result : -result;
     });
 
@@ -422,7 +428,6 @@ function createWalletElement(wallet) {
         </div>
     `;
 
-    // Добавляем обработчики для кнопок
     const deleteBtn = walletDiv.querySelector('.wallet-actions button:nth-child(4)');
     deleteBtn.addEventListener('click', (e) => {
         e.stopPropagation();
@@ -463,11 +468,8 @@ function deleteWallet(walletId) {
             .filter(wallet => wallet.currency === 'RUB')
             .reduce((sum, wallet) => sum + wallet.amount, 0);
         
-        // Вычисляем изменение баланса
         lastBalanceChange = newTotalBalance - oldTotalBalance;
         previousTotalBalance = oldTotalBalance;
-        
-        // Показываем изменение только если оно не равно нулю
         showBalanceChange = lastBalanceChange !== 0;
         
         saveWallets();
@@ -480,13 +482,11 @@ function editWallet(walletId) {
     const wallet = wallets.find(w => w.id === walletId);
     if (!wallet) return;
 
-    // Заполняем форму данными кошелька
     document.getElementById('walletName').value = wallet.name;
     document.getElementById('walletAmount').value = wallet.amount;
     document.getElementById('walletCurrency').value = wallet.currency;
     document.getElementById('walletType').value = wallet.type;
 
-    // Устанавливаем выбранный цвет
     document.querySelectorAll('.color-option').forEach(opt => {
         opt.classList.remove('selected');
         if (opt.dataset.color === wallet.color) {
@@ -494,10 +494,8 @@ function editWallet(walletId) {
         }
     });
 
-    // Показываем модальное окно
     addWalletModal.classList.add('active');
 
-    // Устанавливаем обработчик для редактирования
     walletForm.onsubmit = function(e) {
         e.preventDefault();
         
@@ -507,7 +505,6 @@ function editWallet(walletId) {
         const type = document.getElementById('walletType').value;
         const color = getSelectedColor();
 
-        // Простая валидация
         if (amountInput.trim() === '') {
             alert('Пожалуйста, введите сумму');
             return false;
@@ -523,7 +520,6 @@ function editWallet(walletId) {
             .filter(wallet => wallet.currency === 'RUB')
             .reduce((sum, wallet) => sum + wallet.amount, 0);
         
-        // Обновляем данные кошелька
         wallet.name = name;
         wallet.amount = amount;
         wallet.currency = currency;
@@ -535,11 +531,8 @@ function editWallet(walletId) {
             .filter(wallet => wallet.currency === 'RUB')
             .reduce((sum, wallet) => sum + wallet.amount, 0);
         
-        // Вычисляем изменение баланса
         lastBalanceChange = newTotalBalance - oldTotalBalance;
         previousTotalBalance = oldTotalBalance;
-        
-        // Показываем изменение только если оно не равно нулю
         showBalanceChange = lastBalanceChange !== 0;
         
         saveWallets();
@@ -551,7 +544,6 @@ function editWallet(walletId) {
         
         alert('Изменения внесены');
         
-        // Возвращаем стандартный обработчик
         walletForm.onsubmit = handleAddWallet;
         
         return false;
@@ -577,11 +569,8 @@ function copyWallet(walletId) {
             .filter(wallet => wallet.currency === 'RUB')
             .reduce((sum, wallet) => sum + wallet.amount, 0);
         
-        // Вычисляем изменение баланса
         lastBalanceChange = newTotalBalance - oldTotalBalance;
         previousTotalBalance = oldTotalBalance;
-        
-        // Показываем изменение только если оно не равно нулю
         showBalanceChange = lastBalanceChange !== 0;
         
         saveWallets();
@@ -606,10 +595,8 @@ function updateTotalBalance() {
         .filter(wallet => wallet.currency === 'RUB')
         .reduce((sum, wallet) => sum + wallet.amount, 0);
 
-    // Обновляем отображение
     totalBalanceElement.textContent = formatAmount(totalRub, 'RUB');
     
-    // Показываем изменение баланса только если есть разница или флаг установлен
     if (showBalanceChange && lastBalanceChange !== 0) {
         let changeText = '';
         if (lastBalanceChange > 0) {
@@ -629,6 +616,81 @@ function updateTotalBalance() {
     }
     
     saveWallets();
+}
+
+// Функция поделиться приложением
+function shareApp() {
+    if (navigator.share) {
+        navigator.share({
+            title: 'Money Muffin',
+            text: 'Учет финансов - просто и удобно!',
+            url: window.location.href
+        })
+        .then(() => console.log('Успешный шаринг'))
+        .catch((error) => {
+            console.log('Ошибка шаринга:', error);
+            fallbackShare();
+        });
+    } else {
+        fallbackShare();
+    }
+}
+
+// Фолбэк для браузеров без поддержки Web Share API
+function fallbackShare() {
+    const url = window.location.href;
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(url)
+            .then(() => {
+                alert('Ссылка скопирована в буфер обмена!');
+            })
+            .catch(() => {
+                prompt('Скопируйте ссылку вручную:', url);
+            });
+    } else {
+        prompt('Скопируйте ссылку вручную:', url);
+    }
+}
+
+// Показать подтверждение удаления
+function showClearAllConfirmation() {
+    confirmModal.classList.add('active');
+}
+
+// Скрыть подтверждение удаления
+function hideClearAllConfirmation() {
+    confirmModal.classList.remove('active');
+}
+
+// Полное удаление всех данных
+function clearAllData() {
+    try {
+        localStorage.removeItem('moneyMuffinWallets');
+        localStorage.removeItem('moneyMuffinPreviousBalance');
+        localStorage.removeItem('moneyMuffinLastChange');
+        localStorage.removeItem('moneyMuffinShowChange');
+        localStorage.removeItem('moneyMuffinSort');
+        localStorage.removeItem('moneyMuffinSortDirection');
+        
+        wallets = [...initialWallets];
+        previousTotalBalance = 1025240;
+        lastBalanceChange = -13767;
+        showBalanceChange = true;
+        currentSort = 'amount';
+        sortDirection = 'desc';
+        
+        saveWallets();
+        renderWallets();
+        updateTotalBalance();
+        updateSortButtons();
+        
+        hideClearAllConfirmation();
+        alert('Все данные были успешно сброшены к начальному состоянию!');
+        
+    } catch (error) {
+        console.error('Ошибка при удалении данных:', error);
+        alert('Произошла ошибка при удалении данных. Попробуйте еще раз.');
+    }
 }
 
 // Вспомогательные функции
