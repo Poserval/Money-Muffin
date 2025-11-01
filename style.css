@@ -109,6 +109,12 @@ body {
     align-items: flex-end;
 }
 
+.balance-amount-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
 .balance-amount {
     font-size: 32px;
     font-weight: 700;
@@ -116,6 +122,73 @@ body {
     line-height: 1.1;
     text-align: right;
     margin-top: 13px;
+}
+
+.currency-selector {
+    position: relative;
+    display: inline-block;
+}
+
+.selected-currency {
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    backdrop-filter: blur(10px);
+    margin-top: 13px;
+}
+
+.selected-currency:hover {
+    background: rgba(255, 255, 255, 0.4);
+    transform: scale(1.1);
+}
+
+.currency-dropdown {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    background: white;
+    border-radius: 12px;
+    padding: 8px;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+    min-width: 120px;
+    z-index: 1000;
+    display: none;
+    margin-top: 8px;
+}
+
+.currency-selector.active .currency-dropdown {
+    display: block;
+}
+
+.currency-option {
+    padding: 10px 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    color: #1d1d1f;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.currency-option:hover {
+    background: #f5f5f7;
+}
+
+.currency-option:active {
+    background: #007aff;
+    color: white;
 }
 
 .balance-change-container {
@@ -637,6 +710,16 @@ body {
     .sort-actions {
         justify-content: flex-end;
     }
+    
+    .balance-amount-container {
+        gap: 6px;
+    }
+    
+    .selected-currency {
+        width: 28px;
+        height: 28px;
+        font-size: 14px;
+    }
 }
 
 @media (max-width: 380px) {
@@ -673,5 +756,24 @@ body {
     .wallets-grid {
         grid-template-columns: 1fr;
         gap: 8px;
+    }
+    
+    .currency-dropdown {
+        min-width: 110px;
+    }
+    
+    .currency-option {
+        padding: 8px 10px;
+        font-size: 13px;
+    }
+    
+    .balance-amount {
+        font-size: 28px;
+    }
+    
+    .selected-currency {
+        width: 26px;
+        height: 26px;
+        font-size: 13px;
     }
 }
