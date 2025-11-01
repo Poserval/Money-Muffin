@@ -3,6 +3,10 @@ let wallets = [];
 let currentSort = 'amount';
 let sortDirection = 'desc';
 let selectedCurrency = 'RUB';
+let isDragging = false;
+let dragStartIndex = -1;
+let dragOverIndex = -1;
+let draggedWalletId = null;
 
 // Символы валют
 const currencySymbols = {
@@ -502,9 +506,10 @@ function createCurrencySection(currency, wallets) {
 
     const walletsGrid = document.createElement('div');
     walletsGrid.className = 'wallets-grid';
+    walletsGrid.dataset.currency = currency;
     
-    wallets.forEach(wallet => {
-        const walletElement = createWalletElement(wallet);
+    wallets.forEach((wallet, index) => {
+        const walletElement = createWalletElement(wallet, index);
         walletsGrid.appendChild(walletElement);
     });
 
@@ -513,10 +518,18 @@ function createCurrencySection(currency, wallets) {
 }
 
 // Создание элемента кошелька
-function createWalletElement(wallet) {
+function createWalletElement(wallet, index) {
     const walletDiv = document.createElement('div');
-    walletDiv.className = 'wallet-item';
+    walletDiv.className = `wallet-item ${wallet.pinned ? 'pinned' : ''}`;
     walletDiv.style.setProperty('--wallet-color', wallet.color);
+    walletDiv.dataset.walletId = wallet.id;
+    walletDiv.dataset.currency = wallet.currency;
+    walletDiv.dataset.index = index;
+    
+    // Добавляем атрибут для перетаскивания
+    if (!wallet.pinned) {
+        walletDiv.setAttribute('draggable', 'true');
+    }
 
     const amountClass = wallet.amount >= 0 ? 'positive' : 'negative';
     const amountFormatted = formatAmount(wallet.amount, wallet.currency);
@@ -560,7 +573,194 @@ function createWalletElement(wallet) {
         togglePinWallet(wallet.id);
     });
 
+    // Добавляем обработчики для перетаскивания (только для незакрепленных кошельков)
+    if (!wallet.pinned) {
+        setupDragAndDrop(walletDiv, wallet.id);
+    }
+
     return walletDiv;
+}
+
+// Настройка перетаскивания для кошелька
+function setupDragAndDrop(walletElement, walletId) {
+    // Начало перетаскивания
+    walletElement.addEventListener('dragstart', (e) => {
+        if (e.target.closest('.wallet-actions')) {
+            e.preventDefault();
+            return;
+        }
+        
+        isDragging = true;
+        draggedWalletId = walletId;
+        walletElement.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        e.dataTransfer.setData('text/plain', walletId);
+        
+        // Сохраняем начальную позицию
+        const currency = walletElement.dataset.currency;
+        const currencyWallets = wallets.filter(w => w.currency === currency && !w.pinned);
+        dragStartIndex = currencyWallets.findIndex(w => w.id == walletId);
+    });
+
+    // Перетаскивание над другим элементом
+    walletElement.addEventListener('dragover', (e) => {
+        if (!isDragging || walletElement.dataset.walletId == draggedWalletId) return;
+        
+        e.preventDefault();
+        walletElement.classList.add('drag-over');
+    });
+
+    // Выход из элемента при перетаскивании
+    walletElement.addEventListener('dragleave', (e) => {
+        walletElement.classList.remove('drag-over');
+    });
+
+    // Бросание элемента
+    walletElement.addEventListener('drop', (e) => {
+        e.preventDefault();
+        walletElement.classList.remove('drag-over');
+        
+        if (!isDragging || !draggedWalletId) return;
+        
+        const targetWalletId = walletElement.dataset.walletId;
+        if (targetWalletId == draggedWalletId) return;
+        
+        // Находим индексы в рамках одной валюты
+        const currency = walletElement.dataset.currency;
+        const draggedWallet = wallets.find(w => w.id == draggedWalletId);
+        
+        // Проверяем, что кошельки в одной валюте
+        if (draggedWallet.currency !== currency) return;
+        
+        const currencyWallets = wallets.filter(w => w.currency === currency && !w.pinned);
+        const dragStartIndex = currencyWallets.findIndex(w => w.id == draggedWalletId);
+        const dragOverIndex = currencyWallets.findIndex(w => w.id == targetWalletId);
+        
+        if (dragStartIndex !== -1 && dragOverIndex !== -1) {
+            // Перемещаем кошелек в массиве
+            moveWalletInArray(draggedWalletId, currency, dragStartIndex, dragOverIndex);
+        }
+    });
+
+    // Конец перетаскивания
+    walletElement.addEventListener('dragend', (e) => {
+        isDragging = false;
+        draggedWalletId = null;
+        
+        // Убираем классы со всех элементов
+        document.querySelectorAll('.wallet-item').forEach(item => {
+            item.classList.remove('dragging', 'drag-over');
+        });
+    });
+
+    // Обработка касаний для мобильных устройств
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let isTouchDragging = false;
+
+    walletElement.addEventListener('touchstart', (e) => {
+        if (e.target.closest('.wallet-actions')) return;
+        
+        const touch = e.touches[0];
+        touchStartX = touch.clientX;
+        touchStartY = touch.clientY;
+        isTouchDragging = true;
+        
+        setTimeout(() => {
+            if (isTouchDragging) {
+                walletElement.classList.add('dragging');
+                isDragging = true;
+                draggedWalletId = walletId;
+            }
+        }, 200); // Задержка для отличия от обычного касания
+    });
+
+    walletElement.addEventListener('touchmove', (e) => {
+        if (!isTouchDragging || !isDragging) return;
+        
+        e.preventDefault();
+        const touch = e.touches[0];
+        const deltaX = touch.clientX - touchStartX;
+        const deltaY = touch.clientY - touchStartY;
+        
+        // Если перемещение достаточно большое, начинаем перетаскивание
+        if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+            walletElement.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+        }
+    });
+
+    walletElement.addEventListener('touchend', (e) => {
+        isTouchDragging = false;
+        
+        if (isDragging) {
+            walletElement.style.transform = '';
+            walletElement.classList.remove('dragging');
+            
+            // Находим элемент под пальцем
+            const touch = e.changedTouches[0];
+            const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
+            const targetWallet = elementUnderTouch?.closest('.wallet-item');
+            
+            if (targetWallet && targetWallet.dataset.walletId != draggedWalletId) {
+                const targetWalletId = targetWallet.dataset.walletId;
+                const currency = targetWallet.dataset.currency;
+                const draggedWallet = wallets.find(w => w.id == draggedWalletId);
+                
+                if (draggedWallet.currency === currency) {
+                    const currencyWallets = wallets.filter(w => w.currency === currency && !w.pinned);
+                    const dragStartIndex = currencyWallets.findIndex(w => w.id == draggedWalletId);
+                    const dragOverIndex = currencyWallets.findIndex(w => w.id == targetWalletId);
+                    
+                    if (dragStartIndex !== -1 && dragOverIndex !== -1) {
+                        moveWalletInArray(draggedWalletId, currency, dragStartIndex, dragOverIndex);
+                    }
+                }
+            }
+            
+            isDragging = false;
+            draggedWalletId = null;
+        }
+    });
+}
+
+// Перемещение кошелька в массиве
+function moveWalletInArray(walletId, currency, fromIndex, toIndex) {
+    // Получаем только незакрепленные кошельки этой валюты
+    const currencyWallets = wallets.filter(w => w.currency === currency && !w.pinned);
+    
+    if (fromIndex < 0 || toIndex < 0 || fromIndex >= currencyWallets.length || toIndex >= currencyWallets.length) {
+        return;
+    }
+    
+    // Находим полные индексы в основном массиве wallets
+    const wallet = wallets.find(w => w.id == walletId);
+    if (!wallet) return;
+    
+    // Удаляем кошелек из текущей позиции
+    const walletIndex = wallets.indexOf(wallet);
+    wallets.splice(walletIndex, 1);
+    
+    // Находим новую позицию для вставки
+    let insertIndex = 0;
+    let pinnedCount = 0;
+    
+    // Считаем закрепленные кошельки этой валюты
+    wallets.forEach(w => {
+        if (w.currency === currency) {
+            if (w.pinned) {
+                pinnedCount++;
+            }
+        }
+    });
+    
+    // Вставляем после закрепленных кошельков + позиция в незакрепленных
+    insertIndex = pinnedCount + toIndex;
+    
+    // Вставляем кошелек на новую позицию
+    wallets.splice(insertIndex, 0, wallet);
+    
+    saveWallets();
+    renderWallets();
 }
 
 // Действия с кошельками
