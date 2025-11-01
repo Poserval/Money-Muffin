@@ -43,7 +43,7 @@ const currencySelector = document.getElementById('currencySelector');
 const selectedCurrencyElement = document.getElementById('selectedCurrency');
 const currencyDropdown = document.getElementById('currencyDropdown');
 
-// Начальные данные
+// Начальные данные с порядком
 const initialWallets = [
     {
         id: 1,
@@ -53,7 +53,8 @@ const initialWallets = [
         type: "deposit",
         lastUpdate: "2025-10-25",
         color: '#007AFF',
-        pinned: false
+        pinned: false,
+        order: 1
     },
     {
         id: 2, 
@@ -63,7 +64,8 @@ const initialWallets = [
         type: "deposit",
         lastUpdate: "2025-10-25",
         color: '#4CD964',
-        pinned: false
+        pinned: false,
+        order: 2
     },
     {
         id: 3,
@@ -73,7 +75,8 @@ const initialWallets = [
         type: "cash",
         lastUpdate: "2025-10-31",
         color: '#FFCC00',
-        pinned: false
+        pinned: false,
+        order: 3
     },
     {
         id: 4,
@@ -83,7 +86,8 @@ const initialWallets = [
         type: "credit",
         lastUpdate: "2025-10-25",
         color: '#FF3B30',
-        pinned: false
+        pinned: false,
+        order: 4
     },
     {
         id: 5,
@@ -93,7 +97,8 @@ const initialWallets = [
         type: "credit", 
         lastUpdate: "2025-10-25",
         color: '#FF9500',
-        pinned: false
+        pinned: false,
+        order: 5
     },
     {
         id: 6,
@@ -103,7 +108,8 @@ const initialWallets = [
         type: "account",
         lastUpdate: "2025-10-25",
         color: '#5AC8FA',
-        pinned: false
+        pinned: false,
+        order: 6
     }
 ];
 
@@ -405,6 +411,11 @@ function handleAddWallet(e) {
 
     const oldTotalBalance = getTotalBalanceInSelectedCurrency();
 
+    // Находим максимальный order для новой валюты
+    const maxOrder = wallets
+        .filter(w => w.currency === currency)
+        .reduce((max, w) => Math.max(max, w.order), 0);
+
     const newWallet = {
         id: Date.now(),
         name: name,
@@ -413,7 +424,8 @@ function handleAddWallet(e) {
         type: type,
         color: color,
         lastUpdate: new Date().toISOString().split('T')[0],
-        pinned: false
+        pinned: false,
+        order: maxOrder + 1
     };
 
     wallets.push(newWallet);
@@ -455,28 +467,8 @@ function setSort(sortType, direction) {
 
 // Отображение кошельков
 function renderWallets() {
-    const sortedWallets = [...wallets].sort((a, b) => {
-        if (a.pinned && !b.pinned) return -1;
-        if (!a.pinned && b.pinned) return 1;
-        
-        let result = 0;
-        
-        if (currentSort === 'name') {
-            result = a.name.localeCompare(b.name);
-        } else {
-            result = a.amount - b.amount;
-        }
-        
-        return sortDirection === 'asc' ? result : -result;
-    });
-
-    const groupedWallets = {
-        'RUB': sortedWallets.filter(wallet => wallet.currency === 'RUB'),
-        'USD': sortedWallets.filter(wallet => wallet.currency === 'USD'),
-        'EUR': sortedWallets.filter(wallet => wallet.currency === 'EUR'),
-        'CNY': sortedWallets.filter(wallet => wallet.currency === 'CNY'),
-        'JPY': sortedWallets.filter(wallet => wallet.currency === 'JPY')
-    };
+    const sortedWallets = getSortedWallets();
+    const groupedWallets = groupWalletsByCurrency(sortedWallets);
     
     walletsContainer.innerHTML = '';
 
@@ -489,6 +481,54 @@ function renderWallets() {
             walletsContainer.appendChild(currencySection);
         }
     }
+}
+
+// Получение отсортированных кошельков
+function getSortedWallets() {
+    return [...wallets].sort((a, b) => {
+        // Сначала закрепленные кошельки
+        if (a.pinned && !b.pinned) return -1;
+        if (!a.pinned && b.pinned) return 1;
+        
+        // Кошельки разной валюты - группируем по валюте
+        if (a.currency !== b.currency) {
+            return a.currency.localeCompare(b.currency);
+        }
+        
+        // Если включена пользовательская сортировка (по order)
+        if (currentSort === 'custom') {
+            return a.order - b.order;
+        }
+        
+        // Если сортировка по имени или сумме
+        let result = 0;
+        if (currentSort === 'name') {
+            result = a.name.localeCompare(b.name);
+        } else if (currentSort === 'amount') {
+            result = a.amount - b.amount;
+        }
+        
+        return sortDirection === 'asc' ? result : -result;
+    });
+}
+
+// Группировка кошельков по валюте
+function groupWalletsByCurrency(walletsArray) {
+    const grouped = {
+        'RUB': [],
+        'USD': [],
+        'EUR': [],
+        'CNY': [],
+        'JPY': []
+    };
+    
+    walletsArray.forEach(wallet => {
+        if (grouped[wallet.currency]) {
+            grouped[wallet.currency].push(wallet);
+        }
+    });
+    
+    return grouped;
 }
 
 // Создание секции валюты
@@ -711,16 +751,32 @@ function setupDragAndDrop(walletElement, walletId) {
     });
 }
 
-// Перемещение кошелька в массиве (исправленная версия)
+// Перемещение кошелька в массиве с обновлением порядка
 function moveWalletInArray(draggedWalletId, targetWalletId) {
-    const draggedIndex = wallets.findIndex(w => w.id == draggedWalletId);
-    const targetIndex = wallets.findIndex(w => w.id == targetWalletId);
+    const draggedWallet = wallets.find(w => w.id == draggedWalletId);
+    const targetWallet = wallets.find(w => w.id == targetWalletId);
     
-    if (draggedIndex === -1 || targetIndex === -1) return;
+    if (!draggedWallet || !targetWallet) return;
     
-    // Перемещаем кошелек
-    const [movedWallet] = wallets.splice(draggedIndex, 1);
-    wallets.splice(targetIndex, 0, movedWallet);
+    // Получаем все кошельки той же валюты
+    const sameCurrencyWallets = wallets.filter(w => w.currency === draggedWallet.currency && !w.pinned);
+    const targetIndex = sameCurrencyWallets.findIndex(w => w.id == targetWalletId);
+    const draggedIndex = sameCurrencyWallets.findIndex(w => w.id == draggedWalletId);
+    
+    if (targetIndex === -1 || draggedIndex === -1) return;
+    
+    // Обновляем порядок всех кошельков в валюте
+    sameCurrencyWallets.splice(draggedIndex, 1);
+    sameCurrencyWallets.splice(targetIndex, 0, draggedWallet);
+    
+    // Присваиваем новые порядковые номера
+    sameCurrencyWallets.forEach((wallet, index) => {
+        wallet.order = index + 1;
+    });
+    
+    // Включаем пользовательскую сортировку
+    currentSort = 'custom';
+    updateSortButtons();
     
     saveWallets();
     renderWallets();
@@ -822,11 +878,17 @@ function copyWallet(walletId) {
     if (wallet) {
         const oldTotalBalance = getTotalBalanceInSelectedCurrency();
 
+        // Находим максимальный order для валюты
+        const maxOrder = wallets
+            .filter(w => w.currency === wallet.currency)
+            .reduce((max, w) => Math.max(max, w.order), 0);
+
         const copiedWallet = {
             ...wallet,
             id: Date.now(),
             name: `${wallet.name} (копия)`,
-            pinned: false
+            pinned: false,
+            order: maxOrder + 1
         };
         wallets.push(copiedWallet);
         
