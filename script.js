@@ -15,6 +15,15 @@ const currencySymbols = {
     'JPY': '¥'
 };
 
+// Названия валют
+const currencyNames = {
+    'RUB': 'Рубль',
+    'USD': 'Доллар', 
+    'EUR': 'Евро',
+    'CNY': 'Юань',
+    'JPY': 'Йена'
+};
+
 // Цвета радуги + черный и серый
 const walletColors = [
     '#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF', '#5856D6',
@@ -41,7 +50,6 @@ const confirmCancelBtn = document.getElementById('confirmCancelBtn');
 const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
 const currencySelector = document.getElementById('currencySelector');
 const selectedCurrencyElement = document.getElementById('selectedCurrency');
-const currencyDropdown = document.getElementById('currencyDropdown');
 
 // Начальные данные с порядком
 const initialWallets = [
@@ -169,30 +177,6 @@ function getAvailableCurrencies() {
     return Array.from(currencies);
 }
 
-// Обновление выпадающего списка валют
-function updateCurrencyDropdown() {
-    const availableCurrencies = getAvailableCurrencies();
-    currencyDropdown.innerHTML = '';
-    
-    // Фильтруем текущую выбранную валюту из списка
-    const otherCurrencies = availableCurrencies.filter(currency => currency !== selectedCurrency);
-    
-    otherCurrencies.forEach(currency => {
-        const currencyOption = document.createElement('div');
-        currencyOption.className = 'currency-option';
-        currencyOption.dataset.currency = currency;
-        currencyOption.textContent = currencySymbols[currency];
-        currencyOption.title = getCurrencyName(currency);
-        
-        currencyOption.addEventListener('click', (e) => {
-            e.stopPropagation();
-            selectCurrency(currency);
-        });
-        
-        currencyDropdown.appendChild(currencyOption);
-    });
-}
-
 // Загрузка данных
 function loadWallets() {
     try {
@@ -225,7 +209,6 @@ function loadWallets() {
         }
         
         updateCurrencyDisplay();
-        updateCurrencyDropdown();
         updateSortButtons();
         renderWallets();
         updateTotalBalance();
@@ -233,7 +216,6 @@ function loadWallets() {
         console.error('Ошибка загрузки данных:', error);
         wallets = [...initialWallets];
         updateCurrencyDisplay();
-        updateCurrencyDropdown();
         renderWallets();
         updateTotalBalance();
     }
@@ -289,14 +271,11 @@ function setupEventListeners() {
     confirmCancelBtn.addEventListener('click', hideClearAllConfirmation);
     confirmDeleteBtn.addEventListener('click', clearAllData);
     
-    // Обработчики для селектора валют
-    selectedCurrencyElement.addEventListener('click', toggleCurrencyDropdown);
+    // Обработчик для переключения валюты - простой клик
+    selectedCurrencyElement.addEventListener('click', toggleCurrency);
     
-    // Закрытие выпадающих списков при клике вне их
+    // Закрытие модальных окон при клике вне их
     document.addEventListener('click', (e) => {
-        if (!currencySelector.contains(e.target)) {
-            closeCurrencyDropdown();
-        }
         if (!addWalletModal.contains(e.target) && e.target !== addWalletBtn) {
             addWalletModal.classList.remove('active');
         }
@@ -312,32 +291,27 @@ function setupEventListeners() {
     });
 }
 
-// Функции для работы с валютами
-function toggleCurrencyDropdown(e) {
-    if (e) e.stopPropagation();
-    
+// Переключение валюты по клику
+function toggleCurrency() {
     const availableCurrencies = getAvailableCurrencies();
     if (availableCurrencies.length <= 1) {
-        return; // Не показываем dropdown если только одна валюта
+        return; // Не переключаем если только одна валюта
     }
     
-    currencySelector.classList.toggle('active');
-}
-
-function closeCurrencyDropdown() {
-    currencySelector.classList.remove('active');
-}
-
-function selectCurrency(currency) {
+    // Находим текущий индекс валюты
+    const currentIndex = availableCurrencies.indexOf(selectedCurrency);
+    
+    // Переключаем на следующую валюту по кругу
+    const nextIndex = (currentIndex + 1) % availableCurrencies.length;
+    const nextCurrency = availableCurrencies[nextIndex];
+    
     // Анимация смены иконки
     selectedCurrencyElement.classList.add('changing');
     
     setTimeout(() => {
-        selectedCurrency = currency;
+        selectedCurrency = nextCurrency;
         updateCurrencyDisplay();
-        closeCurrencyDropdown();
         updateTotalBalance();
-        updateCurrencyDropdown();
         saveWallets();
         
         // Завершаем анимацию
@@ -349,6 +323,7 @@ function selectCurrency(currency) {
 
 function updateCurrencyDisplay() {
     selectedCurrencyElement.textContent = currencySymbols[selectedCurrency];
+    selectedCurrencyElement.title = currencyNames[selectedCurrency];
 }
 
 // Обработка сортировки
@@ -435,9 +410,6 @@ function handleAddWallet(e) {
     lastBalanceChange = newTotalBalance - oldTotalBalance;
     previousTotalBalance = oldTotalBalance;
     showBalanceChange = lastBalanceChange !== 0;
-    
-    // Обновляем список доступных валют
-    updateCurrencyDropdown();
     
     saveWallets();
     renderWallets();
@@ -795,9 +767,6 @@ function deleteWallet(walletId) {
         previousTotalBalance = oldTotalBalance;
         showBalanceChange = lastBalanceChange !== 0;
         
-        // Обновляем список доступных валют
-        updateCurrencyDropdown();
-        
         saveWallets();
         renderWallets();
         updateTotalBalance();
@@ -856,9 +825,6 @@ function editWallet(walletId) {
         lastBalanceChange = newTotalBalance - oldTotalBalance;
         previousTotalBalance = oldTotalBalance;
         showBalanceChange = lastBalanceChange !== 0;
-        
-        // Обновляем список доступных валют
-        updateCurrencyDropdown();
         
         saveWallets();
         renderWallets();
@@ -1007,7 +973,6 @@ function clearAllData() {
         selectedCurrency = 'RUB';
         
         updateCurrencyDisplay();
-        updateCurrencyDropdown();
         saveWallets();
         renderWallets();
         updateTotalBalance();
@@ -1024,14 +989,7 @@ function clearAllData() {
 
 // Вспомогательные функции
 function getCurrencyName(currency) {
-    const currencies = {
-        'RUB': 'Рубль',
-        'USD': 'Доллар', 
-        'EUR': 'Евро',
-        'CNY': 'Юань',
-        'JPY': 'Йена'
-    };
-    return currencies[currency] || currency;
+    return currencyNames[currency] || currency;
 }
 
 function formatAmount(amount, currency) {
