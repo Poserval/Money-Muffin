@@ -4,8 +4,6 @@ let currentSort = 'amount';
 let sortDirection = 'desc';
 let selectedCurrency = 'RUB';
 let isDragging = false;
-let dragStartIndex = -1;
-let dragOverIndex = -1;
 let draggedWalletId = null;
 
 // Символы валют
@@ -595,11 +593,6 @@ function setupDragAndDrop(walletElement, walletId) {
         walletElement.classList.add('dragging');
         e.dataTransfer.effectAllowed = 'move';
         e.dataTransfer.setData('text/plain', walletId);
-        
-        // Сохраняем начальную позицию
-        const currency = walletElement.dataset.currency;
-        const currencyWallets = wallets.filter(w => w.currency === currency && !w.pinned);
-        dragStartIndex = currencyWallets.findIndex(w => w.id == walletId);
     });
 
     // Перетаскивание над другим элементом
@@ -657,6 +650,7 @@ function setupDragAndDrop(walletElement, walletId) {
     let touchStartX = 0;
     let touchStartY = 0;
     let isTouchDragging = false;
+    let touchTimeout = null;
 
     walletElement.addEventListener('touchstart', (e) => {
         if (e.target.closest('.wallet-actions')) return;
@@ -666,7 +660,7 @@ function setupDragAndDrop(walletElement, walletId) {
         touchStartY = touch.clientY;
         isTouchDragging = true;
         
-        setTimeout(() => {
+        touchTimeout = setTimeout(() => {
             if (isTouchDragging) {
                 walletElement.classList.add('dragging');
                 isDragging = true;
@@ -691,6 +685,7 @@ function setupDragAndDrop(walletElement, walletId) {
 
     walletElement.addEventListener('touchend', (e) => {
         isTouchDragging = false;
+        clearTimeout(touchTimeout);
         
         if (isDragging) {
             walletElement.style.transform = '';
@@ -698,10 +693,10 @@ function setupDragAndDrop(walletElement, walletId) {
             
             // Находим элемент под пальцем
             const touch = e.changedTouches[0];
-            const elementUnderTouch = document.elementFromPoint(touch.clientX, touch.clientY);
-            const targetWallet = elementUnderTouch?.closest('.wallet-item');
+            const elements = document.elementsFromPoint(touch.clientX, touch.clientY);
+            const targetWallet = elements.find(el => el.classList.contains('wallet-item') && el.dataset.walletId != walletId);
             
-            if (targetWallet && targetWallet.dataset.walletId != draggedWalletId) {
+            if (targetWallet) {
                 const targetWalletId = targetWallet.dataset.walletId;
                 const currency = targetWallet.dataset.currency;
                 const draggedWallet = wallets.find(w => w.id == draggedWalletId);
@@ -719,45 +714,39 @@ function setupDragAndDrop(walletElement, walletId) {
             
             isDragging = false;
             draggedWalletId = null;
+            
+            // Убираем классы со всех элементов
+            document.querySelectorAll('.wallet-item').forEach(item => {
+                item.classList.remove('drag-over');
+            });
         }
     });
 }
 
-// Перемещение кошелька в массиве
+// Перемещение кошелька в массиве (простая и надежная версия)
 function moveWalletInArray(walletId, currency, fromIndex, toIndex) {
-    // Получаем только незакрепленные кошельки этой валюты
+    // Находим индексы в основном массиве wallets
     const currencyWallets = wallets.filter(w => w.currency === currency && !w.pinned);
+    const pinnedCount = wallets.filter(w => w.currency === currency && w.pinned).length;
     
-    if (fromIndex < 0 || toIndex < 0 || fromIndex >= currencyWallets.length || toIndex >= currencyWallets.length) {
-        return;
+    // Вычисляем реальные индексы в основном массиве
+    const realFromIndex = pinnedCount + fromIndex;
+    const realToIndex = pinnedCount + toIndex;
+    
+    // Находим кошелек
+    const walletIndex = wallets.findIndex(w => w.id == walletId && w.currency === currency);
+    if (walletIndex === -1) return;
+    
+    // Перемещаем кошелек в основном массиве
+    const [movedWallet] = wallets.splice(walletIndex, 1);
+    
+    // Вставляем на новую позицию
+    let insertIndex = realToIndex;
+    if (realToIndex > walletIndex) {
+        insertIndex--; // Корректируем индекс, т.к. элемент уже удален
     }
     
-    // Находим полные индексы в основном массиве wallets
-    const wallet = wallets.find(w => w.id == walletId);
-    if (!wallet) return;
-    
-    // Удаляем кошелек из текущей позиции
-    const walletIndex = wallets.indexOf(wallet);
-    wallets.splice(walletIndex, 1);
-    
-    // Находим новую позицию для вставки
-    let insertIndex = 0;
-    let pinnedCount = 0;
-    
-    // Считаем закрепленные кошельки этой валюты
-    wallets.forEach(w => {
-        if (w.currency === currency) {
-            if (w.pinned) {
-                pinnedCount++;
-            }
-        }
-    });
-    
-    // Вставляем после закрепленных кошельков + позиция в незакрепленных
-    insertIndex = pinnedCount + toIndex;
-    
-    // Вставляем кошелек на новую позицию
-    wallets.splice(insertIndex, 0, wallet);
+    wallets.splice(insertIndex, 0, movedWallet);
     
     saveWallets();
     renderWallets();
