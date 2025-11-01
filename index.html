@@ -35,10 +35,17 @@
                 </div>
 
                 <div class="sort-options">
-                    <span>Сортировать:</span>
-                    <div class="sort-buttons">
-                        <button class="sort-btn" data-sort="name">Имя</button>
-                        <button class="sort-btn active" data-sort="amount">Сумма ▼</button>
+                    <div class="sort-left">
+                        <span>Сортировать:</span>
+                        <div class="sort-buttons">
+                            <button class="sort-btn" data-sort="name">Имя</button>
+                            <button class="sort-btn active" data-sort="amount">Сумма ▼</button>
+                        </div>
+                    </div>
+                    <div class="sort-actions">
+                        <button class="action-btn" id="shareBtn" title="Поделиться приложением">📤</button>
+                        <button class="action-btn" id="installBtn" title="Установить приложение" disabled>📱</button>
+                        <button class="action-btn danger" id="clearAllBtn" title="Удалить все данные">📛</button>
                     </div>
                 </div>
 
@@ -92,6 +99,23 @@
                         <button type="submit" class="save-btn">Сохранить</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно подтверждения удаления -->
+    <div class="modal" id="confirmModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>⚠️ Внимание!</h3>
+            </div>
+            <div class="modal-body">
+                <p>Вы уверены, что хотите удалить ВСЕ данные?</p>
+                <p class="warning-text">Это действие удалит все кошельки и историю изменений. Восстановление будет невозможно!</p>
+                <div class="form-actions">
+                    <button type="button" class="cancel-btn" id="confirmCancelBtn">Отмена</button>
+                    <button type="button" class="save-btn danger" id="confirmDeleteBtn">Удалить всё</button>
+                </div>
             </div>
         </div>
     </div>
