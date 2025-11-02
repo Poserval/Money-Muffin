@@ -1,3 +1,63 @@
+// PWA Functionality
+let deferredPrompt;
+
+// Регистрация сервис-воркера
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/sw.js')
+            .then(function(registration) {
+                console.log('ServiceWorker registration successful with scope: ', registration.scope);
+            })
+            .catch(function(error) {
+                console.log('ServiceWorker registration failed: ', error);
+            });
+    });
+}
+
+// Обработчик события установки PWA
+window.addEventListener('beforeinstallprompt', (e) => {
+    console.log('Before install prompt fired');
+    
+    // Предотвращаем автоматическое отображение подсказки
+    e.preventDefault();
+    
+    // Сохраняем событие для использования позже
+    deferredPrompt = e;
+    
+    // Активируем кнопку установки
+    installBtn.disabled = false;
+    installBtn.title = "Установить приложение";
+    
+    console.log('Install button activated');
+});
+
+// Обработчик клика по кнопке установки
+installBtn.addEventListener('click', async () => {
+    console.log('Install button clicked');
+    
+    if (deferredPrompt) {
+        // Показываем подсказку установки
+        deferredPrompt.prompt();
+        
+        // Ждем ответа пользователя
+        const { outcome } = await deferredPrompt.userChoice;
+        console.log(`User response to the install prompt: ${outcome}`);
+        
+        // Очищаем сохраненное событие
+        deferredPrompt = null;
+        
+        // Скрываем кнопку установки
+        installBtn.disabled = true;
+        installBtn.style.display = 'none';
+    }
+});
+
+// Отслеживание успешной установки
+window.addEventListener('appinstalled', (evt) => {
+    console.log('PWA was installed successfully');
+    installBtn.style.display = 'none';
+});
+
 // Данные приложения
 let wallets = [];
 let currentSort = 'amount';
