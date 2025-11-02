@@ -1,34 +1,38 @@
-* {
-    margin: 0;
-    padding: 0;
+/* Безопасный сброс и базовые стили */
+*, *::before, *::after {
     box-sizing: border-box;
 }
 
+html {
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+}
+
+body, h1, h2, h3, h4, h5, h6, p, ul, ol, figure, blockquote, dl, dd {
+    margin: 0;
+    padding: 0;
+}
+
 body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background: #f5f5f7;
     color: #1d1d1f;
     line-height: 1.4;
     touch-action: pan-y;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
+/* Контейнер и структура */
 .container {
     max-width: 400px;
     margin: 0 auto;
     background: white;
-    border-radius: 0;
-}
-
-.header {
-    background: white;
-    padding: 0;
-    color: #1d1d1f;
-    border-radius: 0;
-    box-shadow: none;
+    min-height: 100vh;
     position: relative;
-    overflow: hidden;
 }
 
+/* Заголовок приложения */
 .app-header {
     background: white;
     padding: 15px 16px;
@@ -39,6 +43,7 @@ body {
     align-items: center;
     justify-content: center;
     gap: 8px;
+    position: relative;
 }
 
 .app-title {
@@ -49,8 +54,7 @@ body {
     color: #1d1d1f;
     text-shadow: 
         2px 2px 0px #fff,
-        3px 3px 0px rgba(0, 0, 0, 0.1),
-        4px 4px 4px rgba(0, 0, 0, 0.1);
+        3px 3px 0px rgba(0, 0, 0, 0.1);
     letter-spacing: -0.5px;
     position: relative;
     display: inline-block;
@@ -68,6 +72,7 @@ body {
     top: -1px;
 }
 
+/* Секция общего баланса */
 .total-balance-section {
     background: linear-gradient(135deg, #007AFF 0%, #0056CC 100%);
     padding: 22px 20px;
@@ -126,6 +131,7 @@ body {
     margin-top: 13px;
 }
 
+/* Выбор валюты */
 .currency-selector {
     position: relative;
     display: flex;
@@ -157,6 +163,11 @@ body {
     transform: scale(1.1);
 }
 
+.selected-currency:focus-visible {
+    outline: 2px solid white;
+    outline-offset: 2px;
+}
+
 .selected-currency.changing {
     animation: currencyChange 0.3s ease;
 }
@@ -175,6 +186,7 @@ body {
     }
 }
 
+/* Изменения баланса */
 .balance-change-container {
     display: flex;
     align-items: center;
@@ -212,6 +224,11 @@ body {
     transform: scale(1.1);
 }
 
+.reset-change-btn:focus-visible {
+    outline: 2px solid white;
+    outline-offset: 1px;
+}
+
 .balance-change.positive {
     color: #4CD964;
 }
@@ -220,10 +237,12 @@ body {
     color: #ff3b30;
 }
 
+/* Основной контент */
 .main {
     padding: 0;
 }
 
+/* Заголовок секции */
 .section-header {
     display: flex;
     justify-content: space-between;
@@ -239,6 +258,7 @@ body {
     color: #1d1d1f;
 }
 
+/* Кнопка добавления */
 .add-btn {
     background: #007aff;
     color: white;
@@ -257,6 +277,16 @@ body {
     box-shadow: 0 4px 12px rgba(0, 122, 255, 0.4);
 }
 
+.add-btn:focus-visible {
+    outline: 2px solid #007AFF;
+    outline-offset: 2px;
+}
+
+.add-btn:active {
+    transform: translateY(0);
+}
+
+/* Опции сортировки */
 .sort-options {
     padding: 16px 16px;
     border-bottom: 1px solid #e5e5e7;
@@ -305,6 +335,12 @@ body {
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
+.sort-btn:focus-visible {
+    outline: 2px solid #007AFF;
+    outline-offset: 1px;
+}
+
+/* Действия */
 .sort-actions {
     display: flex;
     gap: 6px;
@@ -334,6 +370,11 @@ body {
     color: white;
     border-color: #007aff;
     transform: scale(1.05);
+}
+
+.action-btn:focus-visible {
+    outline: 2px solid #007AFF;
+    outline-offset: 1px;
 }
 
 .action-btn:active {
@@ -375,6 +416,7 @@ body {
     transform: scale(0.95);
 }
 
+/* Секции валют */
 .currency-section {
     padding: 0;
     background: #f5f5f7;
@@ -389,6 +431,7 @@ body {
     border-bottom: 1px solid #e5e5e7;
 }
 
+/* Сетка кошельков */
 .wallets-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -398,6 +441,7 @@ body {
     transition: all 0.3s ease;
 }
 
+/* Элемент кошелька */
 .wallet-item {
     background: white;
     border-radius: 12px;
@@ -413,11 +457,17 @@ body {
     cursor: pointer;
     user-select: none;
     touch-action: pan-x pan-y;
+    will-change: transform;
 }
 
 .wallet-item:hover {
     transform: translateY(-2px);
     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+}
+
+.wallet-item:focus-visible {
+    outline: 2px solid #007AFF;
+    outline-offset: 2px;
 }
 
 .wallet-item.pinned {
@@ -462,6 +512,7 @@ body {
     background: var(--wallet-color, #007AFF);
 }
 
+/* Контент кошелька */
 .wallet-content {
     flex: 1;
     display: flex;
@@ -496,6 +547,7 @@ body {
     color: #86868b;
 }
 
+/* Действия кошелька */
 .wallet-actions {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -530,6 +582,12 @@ body {
     transform: scale(1.1);
 }
 
+.wallet-action-btn:focus-visible {
+    outline: 2px solid #007AFF;
+    outline-offset: 1px;
+}
+
+/* Модальные окна */
 .modal {
     display: none;
     position: fixed;
@@ -541,6 +599,7 @@ body {
     justify-content: center;
     align-items: center;
     z-index: 1000;
+    backdrop-filter: blur(4px);
 }
 
 .modal.active {
@@ -556,6 +615,18 @@ body {
     max-height: 85vh;
     overflow-y: auto;
     box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    animation: modalAppear 0.3s ease;
+}
+
+@keyframes modalAppear {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
 }
 
 .modal-header {
@@ -576,6 +647,7 @@ body {
     padding: 16px;
 }
 
+/* Формы */
 .form-group {
     margin-bottom: 16px;
 }
@@ -597,6 +669,7 @@ body {
     font-size: 15px;
     background: white;
     transition: border-color 0.2s ease;
+    font-family: inherit;
 }
 
 .form-group input:focus,
@@ -606,6 +679,7 @@ body {
     box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
 }
 
+/* Выбор цвета */
 .color-options {
     display: grid;
     grid-template-columns: repeat(6, 1fr);
@@ -628,12 +702,18 @@ body {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
+.color-option:focus-visible {
+    outline: 2px solid #007AFF;
+    outline-offset: 1px;
+}
+
 .color-option.selected {
     border-color: #007aff;
     transform: scale(1.05);
     box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
 }
 
+/* Кнопки действий формы */
 .form-actions {
     display: flex;
     gap: 10px;
@@ -650,6 +730,7 @@ body {
     font-weight: 600;
     cursor: pointer;
     transition: all 0.2s ease;
+    font-family: inherit;
 }
 
 .cancel-btn {
@@ -660,6 +741,11 @@ body {
 
 .cancel-btn:hover {
     background: #e5e5e7;
+}
+
+.cancel-btn:focus-visible {
+    outline: 2px solid #007AFF;
+    outline-offset: 1px;
 }
 
 .save-btn {
@@ -674,6 +760,12 @@ body {
     box-shadow: 0 3px 8px rgba(0, 122, 255, 0.4);
 }
 
+.save-btn:focus-visible {
+    outline: 2px solid #0056CC;
+    outline-offset: 1px;
+}
+
+/* Текст предупреждения */
 .warning-text {
     color: #ff3b30;
     font-size: 14px;
@@ -691,6 +783,11 @@ body {
     background: #d70015;
 }
 
+.save-btn.danger:focus-visible {
+    outline: 2px solid #d70015;
+}
+
+/* Адаптивность для мобильных */
 @media (max-width: 480px) {
     body {
         padding: 0;
@@ -792,5 +889,120 @@ body {
     
     .wallet-content {
         min-height: 65px;
+    }
+}
+
+/* Улучшения для высокого DPI экранов */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+    .wallet-item {
+        border-width: 0.5px;
+    }
+}
+
+/* Поддержка темной темы */
+@media (prefers-color-scheme: dark) {
+    .container {
+        background: #000;
+    }
+    
+    .app-header {
+        background: #1c1c1e;
+        border-bottom-color: #38383a;
+    }
+    
+    .app-title {
+        color: #ffffff;
+    }
+    
+    .section-header {
+        background: #1c1c1e;
+        border-bottom-color: #38383a;
+    }
+    
+    .section-header h2 {
+        color: #ffffff;
+    }
+    
+    .sort-options {
+        background: #1c1c1e;
+        border-bottom-color: #38383a;
+        color: #ffffff;
+    }
+    
+    .currency-section {
+        background: #000;
+    }
+    
+    .currency-title {
+        background: #000;
+        color: #ffffff;
+        border-bottom-color: #38383a;
+    }
+    
+    .wallets-grid {
+        background: #000;
+    }
+    
+    .wallet-item {
+        background: #1c1c1e;
+        border-color: #38383a;
+    }
+    
+    .wallet-name {
+        color: #ffffff;
+    }
+    
+    .wallet-amount {
+        color: #ffffff;
+    }
+    
+    .wallet-date {
+        color: #98989d;
+    }
+    
+    .wallet-action-btn {
+        background: #2c2c2e;
+        border-color: #38383a;
+        color: #98989d;
+    }
+}
+
+/* Улучшения доступности для пользователей с ограничениями */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+    }
+    
+    .wallet-item:hover {
+        transform: none;
+    }
+    
+    .selected-currency.changing {
+        animation: none;
+    }
+}
+
+/* Улучшения для очень маленьких экранов */
+@media (max-width: 320px) {
+    .app-title {
+        font-size: 26px;
+    }
+    
+    .balance-amount {
+        font-size: 24px;
+    }
+    
+    .wallet-actions {
+        width: 48px;
+        gap: 4px;
+    }
+    
+    .wallet-action-btn {
+        padding: 4px;
+        font-size: 14px;
     }
 }
