@@ -138,36 +138,79 @@ let showBalanceChanges = {
 
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', function() {
-    initDOMElements();
-    initColorOptions();
-    loadWallets();
-    setupEventListeners();
-    initPWA();
+    console.log('DOM loaded - initializing app');
+    try {
+        initDOMElements();
+        initColorOptions();
+        loadWallets();
+        setupEventListeners();
+        initPWA();
+        console.log('App initialized successfully');
+    } catch (error) {
+        console.error('Error during app initialization:', error);
+    }
 });
 
 // Инициализация DOM элементов
 function initDOMElements() {
-    walletsContainer = document.getElementById('walletsContainer');
-    addWalletBtn = document.getElementById('addWalletBtn');
-    addWalletModal = document.getElementById('addWalletModal');
-    cancelBtn = document.getElementById('cancelBtn');
-    walletForm = document.getElementById('walletForm');
+    console.log('Initializing DOM elements');
+    
+    const elements = {
+        walletsContainer: 'walletsContainer',
+        addWalletBtn: 'addWalletBtn',
+        addWalletModal: 'addWalletModal',
+        cancelBtn: 'cancelBtn',
+        walletForm: 'walletForm',
+        totalBalance: 'totalBalance',
+        balanceChange: 'balanceChange',
+        colorOptions: 'colorOptions',
+        resetChangeBtn: 'resetChangeBtn',
+        shareBtn: 'shareBtn',
+        installBtn: 'installBtn',
+        clearAllBtn: 'clearAllBtn',
+        confirmModal: 'confirmModal',
+        confirmCancelBtn: 'confirmCancelBtn',
+        confirmDeleteBtn: 'confirmDeleteBtn',
+        selectedCurrency: 'selectedCurrency'
+    };
+
+    // Безопасное получение элементов
+    for (const [key, id] of Object.entries(elements)) {
+        const element = document.getElementById(id);
+        if (!element) {
+            console.warn(`Элемент с id "${id}" не найден`);
+            continue;
+        }
+        // Сохраняем элементы в глобальные переменные
+        switch(key) {
+            case 'walletsContainer': walletsContainer = element; break;
+            case 'addWalletBtn': addWalletBtn = element; break;
+            case 'addWalletModal': addWalletModal = element; break;
+            case 'cancelBtn': cancelBtn = element; break;
+            case 'walletForm': walletForm = element; break;
+            case 'totalBalance': totalBalanceElement = element; break;
+            case 'balanceChange': balanceChangeElement = element; break;
+            case 'colorOptions': colorOptions = element; break;
+            case 'resetChangeBtn': resetChangeBtn = element; break;
+            case 'shareBtn': shareBtn = element; break;
+            case 'installBtn': installBtn = element; break;
+            case 'clearAllBtn': clearAllBtn = element; break;
+            case 'confirmModal': confirmModal = element; break;
+            case 'confirmCancelBtn': confirmCancelBtn = element; break;
+            case 'confirmDeleteBtn': confirmDeleteBtn = element; break;
+            case 'selectedCurrency': selectedCurrencyElement = element; break;
+        }
+    }
+
+    // Безопасное получение кнопок сортировки
     sortButtons = document.querySelectorAll('.sort-btn');
-    totalBalanceElement = document.getElementById('totalBalance');
-    balanceChangeElement = document.getElementById('balanceChange');
-    colorOptions = document.getElementById('colorOptions');
-    resetChangeBtn = document.getElementById('resetChangeBtn');
-    shareBtn = document.getElementById('shareBtn');
-    installBtn = document.getElementById('installBtn');
-    clearAllBtn = document.getElementById('clearAllBtn');
-    confirmModal = document.getElementById('confirmModal');
-    confirmCancelBtn = document.getElementById('confirmCancelBtn');
-    confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-    selectedCurrencyElement = document.getElementById('selectedCurrency');
+    console.log(`Found ${sortButtons.length} sort buttons`);
 }
 
-// PWA Functionality - УЛУЧШЕННАЯ ВЕРСИЯ
+// PWA Functionality - ИСПРАВЛЕННАЯ ВЕРСИЯ
 function initPWA() {
+    console.log('Initializing PWA functionality');
+    
     let deferredPrompt;
 
     // Обработчик события установки PWA
@@ -180,15 +223,15 @@ function initPWA() {
         if (installBtn) {
             installBtn.disabled = false;
             installBtn.title = "Установить приложение";
+            console.log('Install button enabled');
         }
     });
 
-    // Обработчик клика по кнопке установки - ПРИНУДИТЕЛЬНАЯ УСТАНОВКА
+    // Обработчик клика по кнопке установки
     if (installBtn) {
         installBtn.addEventListener('click', async () => {
             console.log('Install button clicked - attempting installation');
             
-            // ПЕРВЫЙ ПРИОРИТЕТ: Пробуем нативный баннер установки
             if (deferredPrompt) {
                 try {
                     console.log('Showing native install prompt');
@@ -199,28 +242,28 @@ function initPWA() {
                     
                     if (choiceResult.outcome === 'accepted') {
                         console.log('User accepted the install');
-                        installBtn.style.display = 'none';
+                        if (installBtn) {
+                            installBtn.style.display = 'none';
+                        }
                         showInstallSuccess();
-                        return; // Успешно установлено - выходим
                     } else {
                         console.log('User dismissed the install');
-                        // Пользователь отказался - показываем инструкцию
                         showInstallInstructions();
                     }
                     
                 } catch (error) {
                     console.log('Native prompt failed:', error);
-                    // Нативный баннер не сработал - показываем инструкцию
                     showInstallInstructions();
                 }
                 
                 deferredPrompt = null;
             } else {
-                // Нативный баннер недоступен - сразу показываем инструкцию
                 console.log('No deferred prompt available');
                 showInstallInstructions();
             }
         });
+    } else {
+        console.warn('Install button not found');
     }
 
     // Отслеживание успешной установки
@@ -233,7 +276,7 @@ function initPWA() {
     });
 }
 
-// Функция показа инструкции по установке - ТОЛЬКО ЕСЛИ НЕ СРАБОТАЛА АВТОМАТИЧЕСКАЯ УСТАНОВКА
+// Функция показа инструкции по установке
 function showInstallInstructions() {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isAndroid = /Android/.test(navigator.userAgent);
@@ -274,81 +317,14 @@ function showInstallInstructions() {
 function showInstallSuccess() {
     alert('🎉 Приложение успешно установлено!\n\nТеперь оно доступно на вашем рабочем столе и работает оффлайн.');
 }
-    
-    const modal = document.createElement('div');
-    modal.style.cssText = `
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0,0,0,0.5);
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        z-index: 10000;
-    `;
-    
-    modal.innerHTML = `
-        <div style="
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            max-width: 400px;
-            margin: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-        ">
-            <div style="
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 15px;
-            ">
-                <h3 style="margin: 0; color: #1d1d1f;">🎯 Установка приложения</h3>
-                <button class="close-install-modal" style="
-                    background: none;
-                    border: none;
-                    font-size: 20px;
-                    cursor: pointer;
-                    color: #86868b;
-                ">×</button>
-            </div>
-            <div style="
-                color: #1d1d1f;
-                line-height: 1.5;
-                white-space: pre-line;
-                margin-bottom: 15px;
-            ">${instructions}</div>
-            <button class="close-install-modal" style="
-                background: #007AFF;
-                color: white;
-                border: none;
-                padding: 10px 20px;
-                border-radius: 8px;
-                cursor: pointer;
-                width: 100%;
-                font-weight: 600;
-            ">Понятно</button>
-        </div>
-    `;
-    
-    modal.className = 'install-modal';
-    document.body.appendChild(modal);
-    
-    // Закрытие модального окна
-    modal.querySelectorAll('.close-install-modal').forEach(btn => {
-        btn.addEventListener('click', () => modal.remove());
-    });
-    
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) {
-            modal.remove();
-        }
-    });
-}
 
 // Инициализация выбора цвета
 function initColorOptions() {
+    if (!colorOptions) {
+        console.warn('Color options container not found');
+        return;
+    }
+    
     colorOptions.innerHTML = '';
     
     walletColors.forEach((color, index) => {
@@ -462,56 +438,100 @@ function saveWallets() {
 
 // Настройка обработчиков событий
 function setupEventListeners() {
-    addWalletBtn.addEventListener('click', () => {
-        addWalletModal.classList.add('active');
-        walletForm.reset();
-        walletForm.onsubmit = handleAddWallet;
-    });
-
-    cancelBtn.addEventListener('click', () => {
-        addWalletModal.classList.remove('active');
-        walletForm.reset();
-        walletForm.onsubmit = null;
-    });
-
-    sortButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const sortType = btn.dataset.sort;
-            handleSortClick(sortType);
+    // Проверка существования элементов перед добавлением обработчиков
+    if (addWalletBtn && addWalletModal) {
+        addWalletBtn.addEventListener('click', () => {
+            addWalletModal.classList.add('active');
+            if (walletForm) {
+                walletForm.reset();
+                walletForm.onsubmit = handleAddWallet;
+            }
         });
-    });
+    }
 
-    addWalletModal.addEventListener('click', (e) => {
-        if (e.target === addWalletModal) {
+    if (cancelBtn && addWalletModal) {
+        cancelBtn.addEventListener('click', () => {
             addWalletModal.classList.remove('active');
-            walletForm.reset();
-            walletForm.onsubmit = null;
-        }
-    });
+            if (walletForm) {
+                walletForm.reset();
+                walletForm.onsubmit = null;
+            }
+        });
+    }
 
-    resetChangeBtn.addEventListener('click', resetBalanceChange);
-    shareBtn.addEventListener('click', shareApp);
-    clearAllBtn.addEventListener('click', showClearAllConfirmation);
-    confirmCancelBtn.addEventListener('click', hideClearAllConfirmation);
-    confirmDeleteBtn.addEventListener('click', clearAllData);
+    // Безопасная обработка кнопок сортировки
+    if (sortButtons) {
+        sortButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                const sortType = btn.dataset.sort;
+                if (sortType) {
+                    handleSortClick(sortType);
+                }
+            });
+        });
+    }
+
+    if (addWalletModal) {
+        addWalletModal.addEventListener('click', (e) => {
+            if (e.target === addWalletModal) {
+                addWalletModal.classList.remove('active');
+                if (walletForm) {
+                    walletForm.reset();
+                    walletForm.onsubmit = null;
+                }
+            }
+        });
+    }
+
+    if (resetChangeBtn) {
+        resetChangeBtn.addEventListener('click', resetBalanceChange);
+    }
+
+    if (shareBtn) {
+        shareBtn.addEventListener('click', shareApp);
+    }
+
+    if (clearAllBtn && confirmModal) {
+        clearAllBtn.addEventListener('click', showClearAllConfirmation);
+    }
+
+    if (confirmCancelBtn && confirmModal) {
+        confirmCancelBtn.addEventListener('click', hideClearAllConfirmation);
+    }
+
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', clearAllData);
+    }
     
-    selectedCurrencyElement.addEventListener('click', toggleCurrency);
+    if (selectedCurrencyElement) {
+        selectedCurrencyElement.addEventListener('click', toggleCurrency);
+    }
     
+    // Глобальные обработчики кликов
     document.addEventListener('click', (e) => {
-        if (!addWalletModal.contains(e.target) && e.target !== addWalletBtn) {
+        if (addWalletModal && !addWalletModal.contains(e.target) && e.target !== addWalletBtn) {
             addWalletModal.classList.remove('active');
-            walletForm.reset();
-            walletForm.onsubmit = null;
+            if (walletForm) {
+                walletForm.reset();
+                walletForm.onsubmit = null;
+            }
         }
-        if (!confirmModal.contains(e.target) && e.target !== clearAllBtn) {
+        if (confirmModal && !confirmModal.contains(e.target) && e.target !== clearAllBtn) {
             confirmModal.classList.remove('active');
         }
     });
 
-    confirmModal.addEventListener('click', (e) => {
-        if (e.target === confirmModal) {
-            hideClearAllConfirmation();
-        }
+    if (confirmModal) {
+        confirmModal.addEventListener('click', (e) => {
+            if (e.target === confirmModal) {
+                hideClearAllConfirmation();
+            }
+        });
+    }
+
+    // Добавить обработчик ошибок
+    window.addEventListener('error', (e) => {
+        console.error('Global error:', e.error);
     });
 }
 
@@ -524,7 +544,9 @@ function toggleCurrency() {
     const nextIndex = (currentIndex + 1) % availableCurrencies.length;
     const nextCurrency = availableCurrencies[nextIndex];
     
-    selectedCurrencyElement.classList.add('changing');
+    if (selectedCurrencyElement) {
+        selectedCurrencyElement.classList.add('changing');
+    }
     
     setTimeout(() => {
         selectedCurrency = nextCurrency;
@@ -533,14 +555,18 @@ function toggleCurrency() {
         saveWallets();
         
         setTimeout(() => {
-            selectedCurrencyElement.classList.remove('changing');
+            if (selectedCurrencyElement) {
+                selectedCurrencyElement.classList.remove('changing');
+            }
         }, 100);
     }, ANIMATION_DURATION);
 }
 
 function updateCurrencyDisplay() {
-    selectedCurrencyElement.textContent = currencySymbols[selectedCurrency];
-    selectedCurrencyElement.title = currencyNames[selectedCurrency];
+    if (selectedCurrencyElement) {
+        selectedCurrencyElement.textContent = currencySymbols[selectedCurrency];
+        selectedCurrencyElement.title = currencyNames[selectedCurrency];
+    }
 }
 
 // Обработка сортировки
@@ -557,6 +583,8 @@ function handleSortClick(sortType) {
 
 // Обновление кнопок сортировки
 function updateSortButtons() {
+    if (!sortButtons) return;
+    
     sortButtons.forEach(btn => {
         btn.classList.remove('active');
         if (btn.dataset.sort === currentSort) {
@@ -583,6 +611,8 @@ function resetBalanceChange() {
 // Добавление кошелька
 function handleAddWallet(e) {
     e.preventDefault();
+    
+    if (!walletForm) return false;
     
     const name = document.getElementById('walletName').value;
     const amountInput = document.getElementById('walletAmount').value;
@@ -631,9 +661,13 @@ function handleAddWallet(e) {
     renderWallets();
     updateTotalBalance();
     
-    addWalletModal.classList.remove('active');
-    walletForm.reset();
-    walletForm.onsubmit = null;
+    if (addWalletModal) {
+        addWalletModal.classList.remove('active');
+    }
+    if (walletForm) {
+        walletForm.reset();
+        walletForm.onsubmit = null;
+    }
     alert('Кошелек создан');
     
     return false;
@@ -661,6 +695,11 @@ function setSort(sortType, direction) {
 
 // Отображение кошельков
 function renderWallets() {
+    if (!walletsContainer) {
+        console.warn('Wallets container not found');
+        return;
+    }
+    
     const sortedWallets = getSortedWallets();
     const groupedWallets = groupWalletsByCurrency(sortedWallets);
     
@@ -670,7 +709,7 @@ function renderWallets() {
     
     for (const currency of currencyOrder) {
         const currencyWallets = groupedWallets[currency];
-        if (currencyWallets.length > 0) {
+        if (currencyWallets && currencyWallets.length > 0) {
             const currencySection = createCurrencySection(currency, currencyWallets);
             walletsContainer.appendChild(currencySection);
         }
@@ -994,54 +1033,62 @@ function editWallet(walletId) {
         }
     });
 
-    addWalletModal.classList.add('active');
+    if (addWalletModal) {
+        addWalletModal.classList.add('active');
+    }
 
-    walletForm.onsubmit = function(e) {
-        e.preventDefault();
-        
-        const name = document.getElementById('walletName').value;
-        const amountInput = document.getElementById('walletAmount').value;
-        const currency = document.getElementById('walletCurrency').value;
-        const type = document.getElementById('walletType').value;
-        const color = getSelectedColor();
+    if (walletForm) {
+        walletForm.onsubmit = function(e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('walletName').value;
+            const amountInput = document.getElementById('walletAmount').value;
+            const currency = document.getElementById('walletCurrency').value;
+            const type = document.getElementById('walletType').value;
+            const color = getSelectedColor();
 
-        if (amountInput.trim() === '') {
-            alert('Пожалуйста, введите сумму');
+            if (amountInput.trim() === '') {
+                alert('Пожалуйста, введите сумму');
+                return false;
+            }
+
+            const amount = parseFloat(amountInput);
+            if (isNaN(amount)) {
+                alert('Пожалуйста, введите корректную сумму');
+                return false;
+            }
+
+            const oldBalance = getTotalBalanceInCurrency(currency);
+            
+            wallet.name = name;
+            wallet.amount = amount;
+            wallet.currency = currency;
+            wallet.type = type;
+            wallet.color = color;
+            wallet.lastUpdate = new Date().toISOString().split('T')[0];
+            
+            const newBalance = getTotalBalanceInCurrency(currency);
+            const change = newBalance - oldBalance;
+            
+            balanceChanges[currency] = change;
+            showBalanceChanges[currency] = change !== 0;
+            
+            saveWallets();
+            renderWallets();
+            updateTotalBalance();
+            
+            if (addWalletModal) {
+                addWalletModal.classList.remove('active');
+            }
+            if (walletForm) {
+                walletForm.reset();
+                walletForm.onsubmit = null;
+            }
+            alert('Изменения внесены');
+            
             return false;
-        }
-
-        const amount = parseFloat(amountInput);
-        if (isNaN(amount)) {
-            alert('Пожалуйста, введите корректную сумму');
-            return false;
-        }
-
-        const oldBalance = getTotalBalanceInCurrency(currency);
-        
-        wallet.name = name;
-        wallet.amount = amount;
-        wallet.currency = currency;
-        wallet.type = type;
-        wallet.color = color;
-        wallet.lastUpdate = new Date().toISOString().split('T')[0];
-        
-        const newBalance = getTotalBalanceInCurrency(currency);
-        const change = newBalance - oldBalance;
-        
-        balanceChanges[currency] = change;
-        showBalanceChanges[currency] = change !== 0;
-        
-        saveWallets();
-        renderWallets();
-        updateTotalBalance();
-        
-        addWalletModal.classList.remove('active');
-        walletForm.reset();
-        walletForm.onsubmit = null;
-        alert('Изменения внесены');
-        
-        return false;
-    };
+        };
+    }
 }
 
 // Копирование кошелька
@@ -1089,6 +1136,8 @@ function togglePinWallet(walletId) {
 
 // Обновление общего баланса
 function updateTotalBalance() {
+    if (!totalBalanceElement || !balanceChangeElement || !resetChangeBtn) return;
+    
     const totalBalance = getTotalBalanceInSelectedCurrency();
     
     const formattedBalance = formatTotalBalance(totalBalance);
@@ -1155,11 +1204,15 @@ function fallbackShare() {
 
 // Подтверждение удаления всех данных
 function showClearAllConfirmation() {
-    confirmModal.classList.add('active');
+    if (confirmModal) {
+        confirmModal.classList.add('active');
+    }
 }
 
 function hideClearAllConfirmation() {
-    confirmModal.classList.remove('active');
+    if (confirmModal) {
+        confirmModal.classList.remove('active');
+    }
 }
 
 function clearAllData() {
