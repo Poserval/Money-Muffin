@@ -166,7 +166,7 @@ function initDOMElements() {
     selectedCurrencyElement = document.getElementById('selectedCurrency');
 }
 
-// PWA Functionality
+// PWA Functionality - УЛУЧШЕННАЯ ВЕРСИЯ
 function initPWA() {
     let deferredPrompt;
 
@@ -183,41 +183,57 @@ function initPWA() {
         }
     });
 
-    // Обработчик клика по кнопке установки
+    // Обработчик клика по кнопке установки - ПРИНУДИТЕЛЬНАЯ УСТАНОВКА
     if (installBtn) {
-        installBtn.addEventListener('click', () => {
-            showInstallInstructions();
+        installBtn.addEventListener('click', async () => {
+            console.log('Install button clicked - attempting installation');
             
-            // Пробуем показать нативный баннер через секунду
-            setTimeout(() => {
-                if (deferredPrompt) {
-                    try {
-                        deferredPrompt.prompt();
-                        
-                        deferredPrompt.userChoice.then((choiceResult) => {
-                            if (choiceResult.outcome === 'accepted') {
-                                console.log('User accepted the install');
-                                installBtn.style.display = 'none';
-                            }
-                            deferredPrompt = null;
-                        });
-                    } catch (error) {
-                        console.log('Native prompt error:', error);
+            // ПЕРВЫЙ ПРИОРИТЕТ: Пробуем нативный баннер установки
+            if (deferredPrompt) {
+                try {
+                    console.log('Showing native install prompt');
+                    deferredPrompt.prompt();
+                    
+                    const choiceResult = await deferredPrompt.userChoice;
+                    console.log('User choice:', choiceResult.outcome);
+                    
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install');
+                        installBtn.style.display = 'none';
+                        showInstallSuccess();
+                        return; // Успешно установлено - выходим
+                    } else {
+                        console.log('User dismissed the install');
+                        // Пользователь отказался - показываем инструкцию
+                        showInstallInstructions();
                     }
+                    
+                } catch (error) {
+                    console.log('Native prompt failed:', error);
+                    // Нативный баннер не сработал - показываем инструкцию
+                    showInstallInstructions();
                 }
-            }, 1000);
+                
+                deferredPrompt = null;
+            } else {
+                // Нативный баннер недоступен - сразу показываем инструкцию
+                console.log('No deferred prompt available');
+                showInstallInstructions();
+            }
         });
     }
 
     // Отслеживание успешной установки
     window.addEventListener('appinstalled', () => {
+        console.log('PWA was installed successfully');
         if (installBtn) {
             installBtn.style.display = 'none';
         }
+        showInstallSuccess();
     });
 }
 
-// Функция показа инструкции по установке
+// Функция показа инструкции по установке - ТОЛЬКО ЕСЛИ НЕ СРАБОТАЛА АВТОМАТИЧЕСКАЯ УСТАНОВКА
 function showInstallInstructions() {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     const isAndroid = /Android/.test(navigator.userAgent);
@@ -226,23 +242,38 @@ function showInstallInstructions() {
     
     if (isIOS) {
         instructions = `📱 Установка на iPhone/iPad:
+
 1. Нажмите кнопку "Поделиться" ⎊ 
 2. Прокрутите вниз и выберите "На экран «Домой»"
 3. Нажмите "Добавить" в правом верхнем углу
 4. Готово! Приложение появится на рабочем столе`;
     } else if (isAndroid) {
         instructions = `📱 Установка на Android:
+
+Автоматическая установка не сработала 😔
+
+Сделайте вручную:
 1. Нажмите меню браузера (⋮ или ⋯)
 2. Выберите "Установить приложение" 
 3. Подтвердите установку
 4. Готово! Приложение появится в списке приложений`;
     } else {
         instructions = `📱 Установка приложения:
+
 1. В меню браузера найдите "Установить приложение"
 2. Или используйте опцию "Добавить на рабочий стол"
 3. Подтвердите установку
 4. Готово! Приложение будет доступно оффлайн`;
     }
+    
+    // Используем простой alert для гарантии работы
+    alert(instructions);
+}
+
+// Функция показа успешной установки
+function showInstallSuccess() {
+    alert('🎉 Приложение успешно установлено!\n\nТеперь оно доступно на вашем рабочем столе и работает оффлайн.');
+}
     
     const modal = document.createElement('div');
     modal.style.cssText = `
