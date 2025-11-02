@@ -21,9 +21,6 @@
                             <div class="balance-amount" id="totalBalance">1 025 240</div>
                             <div class="currency-selector" id="currencySelector">
                                 <div class="selected-currency" id="selectedCurrency">₽</div>
-                                <div class="currency-dropdown" id="currencyDropdown">
-                                    <!-- Валюты будут добавлены через JavaScript -->
-                                </div>
                             </div>
                         </div>
                         <div class="balance-change-container">
@@ -52,7 +49,8 @@
                     </div>
                     <div class="sort-actions">
                         <button class="action-btn" id="shareBtn" title="Поделиться приложением">📤</button>
-                        <button class="action-btn" id="installBtn" title="Установить приложение" disabled>📱</button>
+                        <!-- Кнопка установки отключена до реализации PWA -->
+                        <button class="action-btn" id="installBtn" title="Установить приложение (скоро)" disabled>📱</button>
                         <button class="action-btn danger" id="clearAllBtn" title="Удалить все данные">📛</button>
                     </div>
                 </div>
@@ -68,7 +66,7 @@
     <div class="modal" id="addWalletModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>Добавить кошелек</h3>
+                <h3 aria-label="Добавление нового кошелька">Добавить кошелек</h3>
             </div>
             <div class="modal-body">
                 <form id="walletForm">
@@ -118,7 +116,7 @@
     <div class="modal" id="confirmModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3>⚠️ Внимание!</h3>
+                <h3 aria-label="Подтверждение удаления данных">⚠️ Внимание!</h3>
             </div>
             <div class="modal-body">
                 <p>Вы уверены, что хотите удалить ВСЕ данные?</p>
