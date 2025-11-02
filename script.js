@@ -111,7 +111,7 @@ const initialWallets = [
     }
 ];
 
-// Переменные для баланса - теперь для каждой валюты отдельно
+// Переменные для баланса
 let previousBalances = {
     'RUB': 1025240.85,
     'USD': 0,
@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initColorOptions();
     loadWallets();
     setupEventListeners();
-    initPWA(); // Инициализируем PWA после загрузки DOM
+    initPWA();
 });
 
 // Инициализация DOM элементов
@@ -170,39 +170,158 @@ function initDOMElements() {
 function initPWA() {
     let deferredPrompt;
 
-    // ВКЛЮЧАЕМ сервис-воркер
-    if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('https://poserval.github.io/money-muffin/sw.js')
-            .then(function(registration) {
-                console.log('ServiceWorker registered successfully');
-            })
-            .catch(function(error) {
-                console.log('ServiceWorker registration failed:', error);
-            });
-    }
-
-    // Обработчик установки PWA
+    // Обработчик события установки PWA
     window.addEventListener('beforeinstallprompt', (e) => {
         console.log('Before install prompt fired');
+        
         e.preventDefault();
         deferredPrompt = e;
         
-        if (installBtn) {
+        if (installBtn && typeof installBtn !== 'undefined') {
             installBtn.disabled = false;
             installBtn.title = "Установить приложение";
+            console.log('Install button activated');
         }
     });
+
+    // Обработчик клика по кнопке установки
+    if (installBtn) {
+        installBtn.addEventListener('click', async () => {
+            console.log('Install button clicked');
+            
+            if (deferredPrompt) {
+                try {
+                    deferredPrompt.prompt();
+                    const { outcome } = await deferredPrompt.userChoice;
+                    console.log(`User response: ${outcome}`);
+                    
+                    if (outcome === 'accepted') {
+                        console.log('User accepted the install');
+                        installBtn.style.display = 'none';
+                    } else {
+                        showInstallInstructions();
+                    }
+                    
+                } catch (error) {
+                    console.log('Error showing install prompt:', error);
+                    showInstallInstructions();
+                }
+                
+                deferredPrompt = null;
+            } else {
+                showInstallInstructions();
+            }
+        });
+    }
 
     // Отслеживание успешной установки
     window.addEventListener('appinstalled', (evt) => {
         console.log('PWA was installed successfully');
-        if (installBtn && typeof installBtn !== 'undefined') {
+        if (installBtn) {
             installBtn.style.display = 'none';
         }
     });
 }
 
-// Остальной код оставляем без изменений (все функции из предыдущей версии)
+// Функция показа инструкции по установке
+function showInstallInstructions() {
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
+    
+    let instructions = '';
+    
+    if (isIOS) {
+        instructions = `📱 Установка на iPhone/iPad:
+1. Нажмите кнопку "Поделиться" ⎊ 
+2. Прокрутите вниз и выберите "На экран «Домой»"
+3. Нажмите "Добавить" в правом верхнем углу
+4. Готово! Приложение появится на рабочем столе`;
+    } else if (isAndroid) {
+        instructions = `📱 Установка на Android:
+1. Нажмите меню браузера (⋮ или ⋯)
+2. Выберите "Установить приложение" 
+3. Подтвердите установку
+4. Готово! Приложение появится в списке приложений`;
+    } else {
+        instructions = `📱 Установка приложения:
+1. В меню браузера найдите "Установить приложение"
+2. Или используйте опцию "Добавить на рабочий стол"
+3. Подтвердите установку
+4. Готово! Приложение будет доступно оффлайн`;
+    }
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+    `;
+    
+    modal.innerHTML = `
+        <div style="
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 400px;
+            margin: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        ">
+            <div style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+            ">
+                <h3 style="margin: 0; color: #1d1d1f;">🎯 Установка приложения</h3>
+                <button class="close-install-modal" style="
+                    background: none;
+                    border: none;
+                    font-size: 20px;
+                    cursor: pointer;
+                    color: #86868b;
+                ">×</button>
+            </div>
+            <div style="
+                color: #1d1d1f;
+                line-height: 1.5;
+                white-space: pre-line;
+            ">${instructions}</div>
+            <button class="close-install-modal" style="
+                background: #007AFF;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 8px;
+                margin-top: 15px;
+                cursor: pointer;
+                width: 100%;
+                font-weight: 600;
+            ">Понятно</button>
+        </div>
+    `;
+    
+    modal.className = 'install-modal';
+    document.body.appendChild(modal);
+    
+    // Закрытие модального окна
+    modal.querySelectorAll('.close-install-modal').forEach(btn => {
+        btn.addEventListener('click', () => modal.remove());
+    });
+    
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
+        }
+    });
+}
+
 // Инициализация выбора цвета
 function initColorOptions() {
     colorOptions.innerHTML = '';
@@ -269,12 +388,10 @@ function loadWallets() {
             wallets = JSON.parse(savedWallets);
         } else {
             wallets = [...initialWallets];
-            // Инициализируем предыдущие балансы на основе начальных данных
             initializePreviousBalances();
             saveWallets();
         }
         
-        // Проверяем, что выбранная валюта существует в кошельках
         const availableCurrencies = getAvailableCurrencies();
         if (!availableCurrencies.includes(selectedCurrency)) {
             selectedCurrency = availableCurrencies[0] || 'RUB';
@@ -303,7 +420,6 @@ function initializePreviousBalances() {
         balanceChanges[currency] = 0;
         showBalanceChanges[currency] = false;
     });
-    // Для рубля устанавливаем начальное изменение
     balanceChanges['RUB'] = -13767.45;
     showBalanceChanges['RUB'] = true;
 }
@@ -323,16 +439,13 @@ function saveWallets() {
 function setupEventListeners() {
     addWalletBtn.addEventListener('click', () => {
         addWalletModal.classList.add('active');
-        // Сбрасываем форму при открытии
         walletForm.reset();
-        // Устанавливаем обработчик для добавления кошелька
         walletForm.onsubmit = handleAddWallet;
     });
 
     cancelBtn.addEventListener('click', () => {
         addWalletModal.classList.remove('active');
         walletForm.reset();
-        // Сбрасываем обработчик
         walletForm.onsubmit = null;
     });
 
@@ -347,7 +460,6 @@ function setupEventListeners() {
         if (e.target === addWalletModal) {
             addWalletModal.classList.remove('active');
             walletForm.reset();
-            // Сбрасываем обработчик
             walletForm.onsubmit = null;
         }
     });
@@ -358,15 +470,12 @@ function setupEventListeners() {
     confirmCancelBtn.addEventListener('click', hideClearAllConfirmation);
     confirmDeleteBtn.addEventListener('click', clearAllData);
     
-    // Обработчик для переключения валюты - простой клик
     selectedCurrencyElement.addEventListener('click', toggleCurrency);
     
-    // Закрытие модальных окон при клике вне их
     document.addEventListener('click', (e) => {
         if (!addWalletModal.contains(e.target) && e.target !== addWalletBtn) {
             addWalletModal.classList.remove('active');
             walletForm.reset();
-            // Сбрасываем обработчик
             walletForm.onsubmit = null;
         }
         if (!confirmModal.contains(e.target) && e.target !== clearAllBtn) {
@@ -384,18 +493,12 @@ function setupEventListeners() {
 // Переключение валюты по клику
 function toggleCurrency() {
     const availableCurrencies = getAvailableCurrencies();
-    if (availableCurrencies.length <= 1) {
-        return; // Не переключаем если только одна валюта
-    }
+    if (availableCurrencies.length <= 1) return;
     
-    // Находим текущий индекс валюты
     const currentIndex = availableCurrencies.indexOf(selectedCurrency);
-    
-    // Переключаем на следующую валюту по кругу
     const nextIndex = (currentIndex + 1) % availableCurrencies.length;
     const nextCurrency = availableCurrencies[nextIndex];
     
-    // Анимация смены иконки
     selectedCurrencyElement.classList.add('changing');
     
     setTimeout(() => {
@@ -404,7 +507,6 @@ function toggleCurrency() {
         updateTotalBalance();
         saveWallets();
         
-        // Завершаем анимацию
         setTimeout(() => {
             selectedCurrencyElement.classList.remove('changing');
         }, 100);
@@ -474,10 +576,8 @@ function handleAddWallet(e) {
         return false;
     }
 
-    // Сохраняем предыдущий баланс для валюты нового кошелька
     const oldBalance = getTotalBalanceInCurrency(currency);
 
-    // Находим максимальный order для новой валюты
     const maxOrder = wallets
         .filter(w => w.currency === currency)
         .reduce((max, w) => Math.max(max, w.order), 0);
@@ -496,11 +596,9 @@ function handleAddWallet(e) {
 
     wallets.push(newWallet);
     
-    // Рассчитываем изменение для валюты нового кошелька
     const newBalance = getTotalBalanceInCurrency(currency);
     const change = newBalance - oldBalance;
     
-    // Обновляем данные изменения для этой валюты
     balanceChanges[currency] = change;
     showBalanceChanges[currency] = change !== 0;
     
@@ -510,7 +608,6 @@ function handleAddWallet(e) {
     
     addWalletModal.classList.remove('active');
     walletForm.reset();
-    // Сбрасываем обработчик после успешного сохранения
     walletForm.onsubmit = null;
     alert('Кошелек создан');
     
@@ -558,21 +655,17 @@ function renderWallets() {
 // Получение отсортированных кошельков
 function getSortedWallets() {
     return [...wallets].sort((a, b) => {
-        // Сначала закрепленные кошельки
         if (a.pinned && !b.pinned) return -1;
         if (!a.pinned && b.pinned) return 1;
         
-        // Кошельки разной валюты - группируем по валюте
         if (a.currency !== b.currency) {
             return a.currency.localeCompare(b.currency);
         }
         
-        // Если включена пользовательская сортировка (по order)
         if (currentSort === 'custom') {
             return a.order - b.order;
         }
         
-        // Если сортировка по имени или сумме
         let result = 0;
         if (currentSort === 'name') {
             result = a.name.localeCompare(b.name);
@@ -636,7 +729,6 @@ function createWalletElement(wallet, index) {
     walletDiv.dataset.currency = wallet.currency;
     walletDiv.dataset.index = index;
     
-    // Добавляем атрибут для перетаскивания
     if (!wallet.pinned) {
         walletDiv.setAttribute('draggable', 'true');
     }
@@ -683,7 +775,6 @@ function createWalletElement(wallet, index) {
         togglePinWallet(wallet.id);
     });
 
-    // Добавляем обработчики для перетаскивания (только для незакрепленных кошельков)
     if (!wallet.pinned) {
         setupDragAndDrop(walletDiv, wallet.id);
     }
@@ -693,7 +784,6 @@ function createWalletElement(wallet, index) {
 
 // Настройка перетаскивания для кошелька
 function setupDragAndDrop(walletElement, walletId) {
-    // Начало перетаскивания
     walletElement.addEventListener('dragstart', (e) => {
         if (e.target.closest('.wallet-actions')) {
             e.preventDefault();
@@ -707,7 +797,6 @@ function setupDragAndDrop(walletElement, walletId) {
         e.dataTransfer.setData('text/plain', walletId);
     });
 
-    // Перетаскивание над другим элементом
     walletElement.addEventListener('dragover', (e) => {
         if (!isDragging || walletElement.dataset.walletId == draggedWalletId) return;
         
@@ -715,12 +804,10 @@ function setupDragAndDrop(walletElement, walletId) {
         walletElement.classList.add('drag-over');
     });
 
-    // Выход из элемента при перетаскивании
     walletElement.addEventListener('dragleave', (e) => {
         walletElement.classList.remove('drag-over');
     });
 
-    // Бросание элемента
     walletElement.addEventListener('drop', (e) => {
         e.preventDefault();
         walletElement.classList.remove('drag-over');
@@ -730,29 +817,23 @@ function setupDragAndDrop(walletElement, walletId) {
         const targetWalletId = walletElement.dataset.walletId;
         if (targetWalletId == draggedWalletId) return;
         
-        // Находим кошельки
         const draggedWallet = wallets.find(w => w.id == draggedWalletId);
         const targetWallet = wallets.find(w => w.id == targetWalletId);
         
-        // Проверяем, что кошельки в одной валюте
         if (!draggedWallet || !targetWallet || draggedWallet.currency !== targetWallet.currency) return;
         
-        // Перемещаем кошелек
         moveWalletInArray(draggedWalletId, targetWalletId);
     });
 
-    // Конец перетаскивания
     walletElement.addEventListener('dragend', (e) => {
         isDragging = false;
         draggedWalletId = null;
         
-        // Убираем классы со всех элементов
         document.querySelectorAll('.wallet-item').forEach(item => {
             item.classList.remove('dragging', 'drag-over');
         });
     });
 
-    // Обработка касаний для мобильных устройств
     let touchStartX = 0;
     let touchStartY = 0;
     let isTouchDragging = false;
@@ -783,7 +864,6 @@ function setupDragAndDrop(walletElement, walletId) {
         const deltaX = touch.clientX - touchStartX;
         const deltaY = touch.clientY - touchStartY;
         
-        // Если перемещение достаточно большое, начинаем перетаскивание
         if (Math.abs(deltaX) > TOUCH_THRESHOLD || Math.abs(deltaY) > TOUCH_THRESHOLD) {
             walletElement.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
         }
@@ -797,7 +877,6 @@ function setupDragAndDrop(walletElement, walletId) {
             walletElement.style.transform = '';
             walletElement.classList.remove('dragging');
             
-            // Находим элемент под пальцем
             const touch = e.changedTouches[0];
             const elements = document.elementsFromPoint(touch.clientX, touch.clientY);
             const targetWallet = elements.find(el => el.classList.contains('wallet-item') && el.dataset.walletId != walletId);
@@ -815,7 +894,6 @@ function setupDragAndDrop(walletElement, walletId) {
             isDragging = false;
             draggedWalletId = null;
             
-            // Убираем классы со всех элементов
             document.querySelectorAll('.wallet-item').forEach(item => {
                 item.classList.remove('drag-over');
             });
@@ -830,23 +908,19 @@ function moveWalletInArray(draggedWalletId, targetWalletId) {
     
     if (!draggedWallet || !targetWallet) return;
     
-    // Получаем все кошельки той же валюты
     const sameCurrencyWallets = wallets.filter(w => w.currency === draggedWallet.currency && !w.pinned);
     const targetIndex = sameCurrencyWallets.findIndex(w => w.id == targetWalletId);
     const draggedIndex = sameCurrencyWallets.findIndex(w => w.id == draggedWalletId);
     
     if (targetIndex === -1 || draggedIndex === -1) return;
     
-    // Обновляем порядок всех кошельков в валюте
     sameCurrencyWallets.splice(draggedIndex, 1);
     sameCurrencyWallets.splice(targetIndex, 0, draggedWallet);
     
-    // Присваиваем новые порядковые номера
     sameCurrencyWallets.forEach((wallet, index) => {
         wallet.order = index + 1;
     });
     
-    // Включаем пользовательскую сортировку
     currentSort = 'custom';
     updateSortButtons();
     
@@ -868,7 +942,6 @@ function deleteWallet(walletId) {
         const newBalance = getTotalBalanceInCurrency(currency);
         const change = newBalance - oldBalance;
         
-        // Обновляем изменение для валюты удаленного кошелька
         balanceChanges[currency] = change;
         showBalanceChanges[currency] = change !== 0;
         
@@ -896,7 +969,6 @@ function editWallet(walletId) {
 
     addWalletModal.classList.add('active');
 
-    // Устанавливаем обработчик для редактирования
     walletForm.onsubmit = function(e) {
         e.preventDefault();
         
@@ -929,7 +1001,6 @@ function editWallet(walletId) {
         const newBalance = getTotalBalanceInCurrency(currency);
         const change = newBalance - oldBalance;
         
-        // Обновляем изменение для валюты измененного кошелька
         balanceChanges[currency] = change;
         showBalanceChanges[currency] = change !== 0;
         
@@ -939,7 +1010,6 @@ function editWallet(walletId) {
         
         addWalletModal.classList.remove('active');
         walletForm.reset();
-        // Сбрасываем обработчик после успешного сохранения
         walletForm.onsubmit = null;
         alert('Изменения внесены');
         
@@ -953,7 +1023,6 @@ function copyWallet(walletId) {
         const currency = wallet.currency;
         const oldBalance = getTotalBalanceInCurrency(currency);
 
-        // Находим максимальный order для валюты
         const maxOrder = wallets
             .filter(w => w.currency === currency)
             .reduce((max, w) => Math.max(max, w.order), 0);
@@ -970,7 +1039,6 @@ function copyWallet(walletId) {
         const newBalance = getTotalBalanceInCurrency(currency);
         const change = newBalance - oldBalance;
         
-        // Обновляем изменение для валюты скопированного кошелька
         balanceChanges[currency] = change;
         showBalanceChanges[currency] = change !== 0;
         
@@ -994,13 +1062,10 @@ function togglePinWallet(walletId) {
 function updateTotalBalance() {
     const totalBalance = getTotalBalanceInSelectedCurrency();
     
-    // Форматируем сумму общего баланса (без знака валюты)
     const formattedBalance = formatTotalBalance(totalBalance);
     
-    // Обновляем отображение
     totalBalanceElement.textContent = formattedBalance;
     
-    // Обновляем изменение баланса для текущей валюты
     const showChange = showBalanceChanges[selectedCurrency];
     const balanceChange = balanceChanges[selectedCurrency];
     
@@ -1104,10 +1169,8 @@ function getCurrencyName(currency) {
 
 // Форматирование суммы общего баланса (без знака валюты)
 function formatTotalBalance(amount) {
-    // Проверяем, есть ли копейки
     const hasDecimals = amount % 1 !== 0;
     
-    // Форматируем число
     const formatter = new Intl.NumberFormat('ru-RU', {
         minimumFractionDigits: hasDecimals ? 2 : 0,
         maximumFractionDigits: hasDecimals ? 2 : 0
@@ -1119,13 +1182,10 @@ function formatTotalBalance(amount) {
 
 // Форматирование суммы для кошельков и изменения баланса (с знаком валюты)
 function formatAmount(amount, currency) {
-    // Проверяем, есть ли копейки
     const hasDecimals = amount % 1 !== 0;
     
-    // Определяем количество знаков после запятой
     const decimalPlaces = currency === 'JPY' ? 0 : (hasDecimals ? 2 : 0);
     
-    // Форматируем число
     const formatter = new Intl.NumberFormat('ru-RU', {
         minimumFractionDigits: decimalPlaces,
         maximumFractionDigits: decimalPlaces
