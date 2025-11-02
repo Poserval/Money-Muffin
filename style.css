@@ -385,17 +385,12 @@ body {
 
 .wallets-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
     gap: 12px;
     padding: 12px;
     background: var(--background);
     transition: all 0.3s ease;
-}
-
-/* Специальные стили для одного кошелька */
-.wallets-grid:has(> .wallet-item:only-child) {
-    grid-template-columns: minmax(160px, 300px);
-    justify-content: center;
+    justify-items: start;
 }
 
 .wallet-item {
@@ -405,6 +400,7 @@ body {
     border: 1px solid var(--border);
     position: relative;
     min-height: 90px;
+    width: 100%;
     display: flex;
     justify-content: space-between;
     align-items: flex-start;
@@ -713,7 +709,7 @@ body {
     }
     
     .wallets-grid {
-        grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+        grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
     }
     
     .balance-amount-container {
@@ -760,11 +756,6 @@ body {
     
     .wallets-grid {
         grid-template-columns: 1fr;
-        gap: 8px;
-    }
-    
-    .wallets-grid:has(> .wallet-item:only-child) {
-        grid-template-columns: minmax(140px, 280px);
     }
     
     .balance-amount {
