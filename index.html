@@ -4,6 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Money Muffin</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#007AFF">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Money Muffin">
+    <meta name="description" content="Учет финансов - просто и удобно">
+
+    <!-- Icons for Apple devices -->
+    <link rel="apple-touch-icon" href="icons/icon-152x152.png">
+
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -49,8 +63,7 @@
                     </div>
                     <div class="sort-actions">
                         <button class="action-btn" id="shareBtn" title="Поделиться приложением">📤</button>
-                        <!-- Кнопка установки отключена до реализации PWA -->
-                        <button class="action-btn" id="installBtn" title="Установить приложение (скоро)" disabled>📱</button>
+                        <button class="action-btn" id="installBtn" title="Установить приложение">📱</button>
                         <button class="action-btn danger" id="clearAllBtn" title="Удалить все данные">📛</button>
                     </div>
                 </div>
