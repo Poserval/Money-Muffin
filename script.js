@@ -142,6 +142,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initColorOptions();
     loadWallets();
     setupEventListeners();
+    initPWA();
 });
 
 // Инициализация DOM элементов
@@ -165,87 +166,155 @@ function initDOMElements() {
     selectedCurrencyElement = document.getElementById('selectedCurrency');
 }
 
-// ПРОСТАЯ ФУНКЦИЯ ИНСТРУКЦИИ - гарантированно работает
+// PWA Functionality
+function initPWA() {
+    let deferredPrompt;
+
+    // Обработчик события установки PWA
+    window.addEventListener('beforeinstallprompt', (e) => {
+        console.log('Before install prompt fired');
+        
+        e.preventDefault();
+        deferredPrompt = e;
+        
+        if (installBtn) {
+            installBtn.disabled = false;
+            installBtn.title = "Установить приложение";
+        }
+    });
+
+    // Обработчик клика по кнопке установки
+    if (installBtn) {
+        installBtn.addEventListener('click', () => {
+            showInstallInstructions();
+            
+            // Пробуем показать нативный баннер через секунду
+            setTimeout(() => {
+                if (deferredPrompt) {
+                    try {
+                        deferredPrompt.prompt();
+                        
+                        deferredPrompt.userChoice.then((choiceResult) => {
+                            if (choiceResult.outcome === 'accepted') {
+                                console.log('User accepted the install');
+                                installBtn.style.display = 'none';
+                            }
+                            deferredPrompt = null;
+                        });
+                    } catch (error) {
+                        console.log('Native prompt error:', error);
+                    }
+                }
+            }, 1000);
+        });
+    }
+
+    // Отслеживание успешной установки
+    window.addEventListener('appinstalled', () => {
+        if (installBtn) {
+            installBtn.style.display = 'none';
+        }
+    });
+}
+
+// Функция показа инструкции по установке
 function showInstallInstructions() {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
+    const isAndroid = /Android/.test(navigator.userAgent);
     
-    let message = '';
+    let instructions = '';
     
     if (isIOS) {
-        message = `📱 Установка на iPhone/iPad:
-
+        instructions = `📱 Установка на iPhone/iPad:
 1. Нажмите кнопку "Поделиться" ⎊ 
 2. Прокрутите вниз и выберите "На экран «Домой»"
 3. Нажмите "Добавить" в правом верхнем углу
 4. Готово! Приложение появится на рабочем столе`;
-    } else {
-        message = `📱 Установка на Android/Компьютер:
-
+    } else if (isAndroid) {
+        instructions = `📱 Установка на Android:
 1. Нажмите меню браузера (⋮ или ⋯)
 2. Выберите "Установить приложение" 
 3. Подтвердите установку
-4. Готово! Приложение появится в списке приложений
-
-Если не видите опцию установки, обновите страницу или попробуйте позже.`;
+4. Готово! Приложение появится в списке приложений`;
+    } else {
+        instructions = `📱 Установка приложения:
+1. В меню браузера найдите "Установить приложение"
+2. Или используйте опцию "Добавить на рабочий стол"
+3. Подтвердите установку
+4. Готово! Приложение будет доступно оффлайн`;
     }
     
-    // Используем простой alert - он работает везде
-    alert(message);
-}
-
-// Настройка обработчиков событий
-function setupEventListeners() {
-    addWalletBtn.addEventListener('click', () => {
-        addWalletModal.classList.add('active');
-        walletForm.reset();
-        walletForm.onsubmit = handleAddWallet;
-    });
-
-    cancelBtn.addEventListener('click', () => {
-        addWalletModal.classList.remove('active');
-        walletForm.reset();
-        walletForm.onsubmit = null;
-    });
-
-    sortButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const sortType = btn.dataset.sort;
-            handleSortClick(sortType);
-        });
-    });
-
-    // ПРОСТОЙ ОБРАБОТЧИК ДЛЯ КНОПКИ УСТАНОВКИ
-    if (installBtn) {
-        installBtn.addEventListener('click', showInstallInstructions);
-    }
-
-    resetChangeBtn.addEventListener('click', resetBalanceChange);
-    shareBtn.addEventListener('click', shareApp);
-    clearAllBtn.addEventListener('click', showClearAllConfirmation);
-    confirmCancelBtn.addEventListener('click', hideClearAllConfirmation);
-    confirmDeleteBtn.addEventListener('click', clearAllData);
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 10000;
+    `;
     
-    selectedCurrencyElement.addEventListener('click', toggleCurrency);
+    modal.innerHTML = `
+        <div style="
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            max-width: 400px;
+            margin: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        ">
+            <div style="
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 15px;
+            ">
+                <h3 style="margin: 0; color: #1d1d1f;">🎯 Установка приложения</h3>
+                <button class="close-install-modal" style="
+                    background: none;
+                    border: none;
+                    font-size: 20px;
+                    cursor: pointer;
+                    color: #86868b;
+                ">×</button>
+            </div>
+            <div style="
+                color: #1d1d1f;
+                line-height: 1.5;
+                white-space: pre-line;
+                margin-bottom: 15px;
+            ">${instructions}</div>
+            <button class="close-install-modal" style="
+                background: #007AFF;
+                color: white;
+                border: none;
+                padding: 10px 20px;
+                border-radius: 8px;
+                cursor: pointer;
+                width: 100%;
+                font-weight: 600;
+            ">Понятно</button>
+        </div>
+    `;
     
-    document.addEventListener('click', (e) => {
-        if (!addWalletModal.contains(e.target) && e.target !== addWalletBtn) {
-            addWalletModal.classList.remove('active');
-            walletForm.reset();
-            walletForm.onsubmit = null;
-        }
-        if (!confirmModal.contains(e.target) && e.target !== clearAllBtn) {
-            confirmModal.classList.remove('active');
-        }
+    modal.className = 'install-modal';
+    document.body.appendChild(modal);
+    
+    // Закрытие модального окна
+    modal.querySelectorAll('.close-install-modal').forEach(btn => {
+        btn.addEventListener('click', () => modal.remove());
     });
-
-    confirmModal.addEventListener('click', (e) => {
-        if (e.target === confirmModal) {
-            hideClearAllConfirmation();
+    
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.remove();
         }
     });
 }
-
-// Остальные функции остаются БЕЗ ИЗМЕНЕНИЙ...
 
 // Инициализация выбора цвета
 function initColorOptions() {
@@ -358,6 +427,61 @@ function saveWallets() {
     localStorage.setItem('moneyMuffinSort', currentSort);
     localStorage.setItem('moneyMuffinSortDirection', sortDirection);
     localStorage.setItem('moneyMuffinSelectedCurrency', selectedCurrency);
+}
+
+// Настройка обработчиков событий
+function setupEventListeners() {
+    addWalletBtn.addEventListener('click', () => {
+        addWalletModal.classList.add('active');
+        walletForm.reset();
+        walletForm.onsubmit = handleAddWallet;
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        addWalletModal.classList.remove('active');
+        walletForm.reset();
+        walletForm.onsubmit = null;
+    });
+
+    sortButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const sortType = btn.dataset.sort;
+            handleSortClick(sortType);
+        });
+    });
+
+    addWalletModal.addEventListener('click', (e) => {
+        if (e.target === addWalletModal) {
+            addWalletModal.classList.remove('active');
+            walletForm.reset();
+            walletForm.onsubmit = null;
+        }
+    });
+
+    resetChangeBtn.addEventListener('click', resetBalanceChange);
+    shareBtn.addEventListener('click', shareApp);
+    clearAllBtn.addEventListener('click', showClearAllConfirmation);
+    confirmCancelBtn.addEventListener('click', hideClearAllConfirmation);
+    confirmDeleteBtn.addEventListener('click', clearAllData);
+    
+    selectedCurrencyElement.addEventListener('click', toggleCurrency);
+    
+    document.addEventListener('click', (e) => {
+        if (!addWalletModal.contains(e.target) && e.target !== addWalletBtn) {
+            addWalletModal.classList.remove('active');
+            walletForm.reset();
+            walletForm.onsubmit = null;
+        }
+        if (!confirmModal.contains(e.target) && e.target !== clearAllBtn) {
+            confirmModal.classList.remove('active');
+        }
+    });
+
+    confirmModal.addEventListener('click', (e) => {
+        if (e.target === confirmModal) {
+            hideClearAllConfirmation();
+        }
+    });
 }
 
 // Переключение валюты
