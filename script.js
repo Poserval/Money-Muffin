@@ -6,7 +6,7 @@ let selectedCurrency = 'RUB';
 let isDragging = false;
 let draggedWalletId = null;
 
-// Константы для анимаций и таймаутов
+// Константы
 const ANIMATION_DURATION = 150;
 const TOUCH_DELAY = 200;
 const TOUCH_THRESHOLD = 10;
@@ -29,7 +29,7 @@ const currencyNames = {
     'JPY': 'Йена'
 };
 
-// Цвета радуги + черный и серый
+// Цвета кошельков
 const walletColors = [
     '#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF', '#5856D6',
     '#FF2D55', '#AF52DE', '#1D1D1F', '#8E8E93'
@@ -41,7 +41,7 @@ let sortButtons, totalBalanceElement, balanceChangeElement, colorOptions;
 let resetChangeBtn, shareBtn, installBtn, clearAllBtn, confirmModal;
 let confirmCancelBtn, confirmDeleteBtn, selectedCurrencyElement;
 
-// Начальные данные с порядком
+// Начальные данные
 const initialWallets = [
     {
         id: 1,
@@ -111,7 +111,7 @@ const initialWallets = [
     }
 ];
 
-// Переменные для баланса
+// Балансы
 let previousBalances = {
     'RUB': 1025240.85,
     'USD': 0,
@@ -177,46 +177,40 @@ function initPWA() {
         e.preventDefault();
         deferredPrompt = e;
         
-        if (installBtn && typeof installBtn !== 'undefined') {
+        if (installBtn) {
             installBtn.disabled = false;
             installBtn.title = "Установить приложение";
-            console.log('Install button activated');
         }
     });
 
     // Обработчик клика по кнопке установки
     if (installBtn) {
-        installBtn.addEventListener('click', async () => {
-            console.log('Install button clicked');
+        installBtn.addEventListener('click', () => {
+            showInstallInstructions();
             
-            if (deferredPrompt) {
-                try {
-                    deferredPrompt.prompt();
-                    const { outcome } = await deferredPrompt.userChoice;
-                    console.log(`User response: ${outcome}`);
-                    
-                    if (outcome === 'accepted') {
-                        console.log('User accepted the install');
-                        installBtn.style.display = 'none';
-                    } else {
-                        showInstallInstructions();
+            // Пробуем показать нативный баннер через секунду
+            setTimeout(() => {
+                if (deferredPrompt) {
+                    try {
+                        deferredPrompt.prompt();
+                        
+                        deferredPrompt.userChoice.then((choiceResult) => {
+                            if (choiceResult.outcome === 'accepted') {
+                                console.log('User accepted the install');
+                                installBtn.style.display = 'none';
+                            }
+                            deferredPrompt = null;
+                        });
+                    } catch (error) {
+                        console.log('Native prompt error:', error);
                     }
-                    
-                } catch (error) {
-                    console.log('Error showing install prompt:', error);
-                    showInstallInstructions();
                 }
-                
-                deferredPrompt = null;
-            } else {
-                showInstallInstructions();
-            }
+            }, 1000);
         });
     }
 
     // Отслеживание успешной установки
-    window.addEventListener('appinstalled', (evt) => {
-        console.log('PWA was installed successfully');
+    window.addEventListener('appinstalled', () => {
         if (installBtn) {
             installBtn.style.display = 'none';
         }
@@ -292,6 +286,7 @@ function showInstallInstructions() {
                 color: #1d1d1f;
                 line-height: 1.5;
                 white-space: pre-line;
+                margin-bottom: 15px;
             ">${instructions}</div>
             <button class="close-install-modal" style="
                 background: #007AFF;
@@ -299,7 +294,6 @@ function showInstallInstructions() {
                 border: none;
                 padding: 10px 20px;
                 border-radius: 8px;
-                margin-top: 15px;
                 cursor: pointer;
                 width: 100%;
                 font-weight: 600;
@@ -357,7 +351,7 @@ function getSelectedColor() {
     return selected ? selected.dataset.color : walletColors[0];
 }
 
-// Получение списка валют, в которых есть кошельки
+// Получение списка валют
 function getAvailableCurrencies() {
     const currencies = new Set();
     wallets.forEach(wallet => {
@@ -490,7 +484,7 @@ function setupEventListeners() {
     });
 }
 
-// Переключение валюты по клику
+// Переключение валюты
 function toggleCurrency() {
     const availableCurrencies = getAvailableCurrencies();
     if (availableCurrencies.length <= 1) return;
@@ -548,7 +542,7 @@ function updateSortButtons() {
     });
 }
 
-// Сброс изменения баланса для текущей валюты
+// Сброс изменения баланса
 function resetBalanceChange() {
     balanceChanges[selectedCurrency] = 0;
     showBalanceChanges[selectedCurrency] = false;
@@ -614,7 +608,7 @@ function handleAddWallet(e) {
     return false;
 }
 
-// Получение общего баланса в конкретной валюте
+// Получение общего баланса в валюте
 function getTotalBalanceInCurrency(currency) {
     return wallets
         .filter(wallet => wallet.currency === currency)
@@ -782,7 +776,7 @@ function createWalletElement(wallet, index) {
     return walletDiv;
 }
 
-// Настройка перетаскивания для кошелька
+// Настройка перетаскивания
 function setupDragAndDrop(walletElement, walletId) {
     walletElement.addEventListener('dragstart', (e) => {
         if (e.target.closest('.wallet-actions')) {
@@ -834,6 +828,7 @@ function setupDragAndDrop(walletElement, walletId) {
         });
     });
 
+    // Touch события для мобильных
     let touchStartX = 0;
     let touchStartY = 0;
     let isTouchDragging = false;
@@ -901,7 +896,7 @@ function setupDragAndDrop(walletElement, walletId) {
     });
 }
 
-// Перемещение кошелька в массиве с обновлением порядка
+// Перемещение кошелька
 function moveWalletInArray(draggedWalletId, targetWalletId) {
     const draggedWallet = wallets.find(w => w.id == draggedWalletId);
     const targetWallet = wallets.find(w => w.id == targetWalletId);
@@ -928,7 +923,7 @@ function moveWalletInArray(draggedWalletId, targetWalletId) {
     renderWallets();
 }
 
-// Действия с кошельками
+// Удаление кошелька
 function deleteWallet(walletId) {
     if (confirm('Удалить этот кошелек?')) {
         const wallet = wallets.find(w => w.id === walletId);
@@ -951,6 +946,7 @@ function deleteWallet(walletId) {
     }
 }
 
+// Редактирование кошелька
 function editWallet(walletId) {
     const wallet = wallets.find(w => w.id === walletId);
     if (!wallet) return;
@@ -1017,6 +1013,7 @@ function editWallet(walletId) {
     };
 }
 
+// Копирование кошелька
 function copyWallet(walletId) {
     const wallet = wallets.find(w => w.id === walletId);
     if (wallet) {
@@ -1048,6 +1045,7 @@ function copyWallet(walletId) {
     }
 }
 
+// Закрепление кошелька
 function togglePinWallet(walletId) {
     const walletIndex = wallets.findIndex(w => w.id === walletId);
     if (walletIndex !== -1) {
@@ -1090,7 +1088,7 @@ function updateTotalBalance() {
     saveWallets();
 }
 
-// Новые функции для кнопок действий
+// Поделиться приложением
 function shareApp() {
     if (navigator.share) {
         navigator.share({
@@ -1108,6 +1106,7 @@ function shareApp() {
     }
 }
 
+// Резервное копирование ссылки
 function fallbackShare() {
     const url = window.location.href;
     if (navigator.clipboard) {
@@ -1123,6 +1122,7 @@ function fallbackShare() {
     }
 }
 
+// Подтверждение удаления всех данных
 function showClearAllConfirmation() {
     confirmModal.classList.add('active');
 }
@@ -1167,7 +1167,7 @@ function getCurrencyName(currency) {
     return currencyNames[currency] || currency;
 }
 
-// Форматирование суммы общего баланса (без знака валюты)
+// Форматирование суммы общего баланса
 function formatTotalBalance(amount) {
     const hasDecimals = amount % 1 !== 0;
     
@@ -1180,7 +1180,7 @@ function formatTotalBalance(amount) {
     return `${amount < 0 ? '-' : ''}${formatted}`;
 }
 
-// Форматирование суммы для кошельков и изменения баланса (с знаком валюты)
+// Форматирование суммы с валютой
 function formatAmount(amount, currency) {
     const hasDecimals = amount % 1 !== 0;
     
@@ -1197,6 +1197,7 @@ function formatAmount(amount, currency) {
     return `${amount < 0 ? '-' : ''}${formatted} ${symbol}`;
 }
 
+// Форматирование даты
 function formatDate(dateString) {
     try {
         const date = new Date(dateString);
