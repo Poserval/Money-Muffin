@@ -170,59 +170,28 @@ function initDOMElements() {
 function initPWA() {
     let deferredPrompt;
 
-    // ВРЕМЕННО отключаем сервис-воркер полностью
-    /*
+    // ВКЛЮЧАЕМ сервис-воркер
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.getRegistrations().then(function(registrations) {
-            for(let registration of registrations) {
-                registration.unregister();
-            }
-        });
+        navigator.serviceWorker.register('https://poserval.github.io/money-muffin/sw.js')
+            .then(function(registration) {
+                console.log('ServiceWorker registered successfully');
+            })
+            .catch(function(error) {
+                console.log('ServiceWorker registration failed:', error);
+            });
     }
-    */
 
-    // Обработчик события установки PWA - только после инициализации DOM
+    // Обработчик установки PWA
     window.addEventListener('beforeinstallprompt', (e) => {
         console.log('Before install prompt fired');
-        
-        // Предотвращаем автоматическое отображение подсказки
         e.preventDefault();
-        
-        // Сохраняем событие для использования позже
         deferredPrompt = e;
         
-        // Активируем кнопку установки - проверяем что элемент существует
-        if (installBtn && typeof installBtn !== 'undefined') {
+        if (installBtn) {
             installBtn.disabled = false;
             installBtn.title = "Установить приложение";
-            console.log('Install button activated');
-        } else {
-            console.log('Install button not found');
         }
     });
-
-    // Обработчик клика по кнопке установки - проверяем что элемент существует
-    if (installBtn && typeof installBtn !== 'undefined') {
-        installBtn.addEventListener('click', async () => {
-            console.log('Install button clicked');
-            
-            if (deferredPrompt) {
-                // Показываем подсказку установки
-                deferredPrompt.prompt();
-                
-                // Ждем ответа пользователя
-                const { outcome } = await deferredPrompt.userChoice;
-                console.log(`User response to the install prompt: ${outcome}`);
-                
-                // Очищаем сохраненное событие
-                deferredPrompt = null;
-                
-                // Скрываем кнопку установки
-                installBtn.disabled = true;
-                installBtn.style.display = 'none';
-            }
-        });
-    }
 
     // Отслеживание успешной установки
     window.addEventListener('appinstalled', (evt) => {
