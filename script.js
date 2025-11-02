@@ -142,7 +142,6 @@ document.addEventListener('DOMContentLoaded', function() {
     initColorOptions();
     loadWallets();
     setupEventListeners();
-    initPWA();
 });
 
 // Инициализация DOM элементов
@@ -166,63 +165,87 @@ function initDOMElements() {
     selectedCurrencyElement = document.getElementById('selectedCurrency');
 }
 
-// PWA Functionality - ПРОСТАЯ И НАДЕЖНАЯ ВЕРСИЯ
-function initPWA() {
-    let deferredPrompt;
-
-    // Обработчик события установки PWA
-    window.addEventListener('beforeinstallprompt', (e) => {
-        console.log('Before install prompt fired');
-        e.preventDefault();
-        deferredPrompt = e;
-        
-        if (installBtn) {
-            installBtn.disabled = false;
-            installBtn.title = "Установить приложение";
-        }
-    });
-
-    // Обработчик клика по кнопке установки - ТОЛЬКО инструкция
-    if (installBtn) {
-        installBtn.addEventListener('click', () => {
-            showInstallInstructions();
-        });
-    }
-
-    // Отслеживание успешной установки
-    window.addEventListener('appinstalled', () => {
-        console.log('PWA was installed successfully');
-        if (installBtn) {
-            installBtn.style.display = 'none';
-        }
-    });
-}
-
-// Функция показа инструкции по установке - УПРОЩЕННАЯ
+// ПРОСТАЯ ФУНКЦИЯ ИНСТРУКЦИИ - гарантированно работает
 function showInstallInstructions() {
     const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
     
-    let instructions = '';
+    let message = '';
     
     if (isIOS) {
-        instructions = `📱 Установка на iPhone/iPad:
+        message = `📱 Установка на iPhone/iPad:
+
 1. Нажмите кнопку "Поделиться" ⎊ 
 2. Прокрутите вниз и выберите "На экран «Домой»"
 3. Нажмите "Добавить" в правом верхнем углу
 4. Готово! Приложение появится на рабочем столе`;
     } else {
-        instructions = `📱 Установка на Android/Компьютер:
+        message = `📱 Установка на Android/Компьютер:
+
 1. Нажмите меню браузера (⋮ или ⋯)
 2. Выберите "Установить приложение" 
 3. Подтвердите установку
-4. Готово! Приложение появится в списке приложений`;
+4. Готово! Приложение появится в списке приложений
+
+Если не видите опцию установки, обновите страницу или попробуйте позже.`;
     }
     
-    // Простое alert-окно вместо сложного модального
-    alert(instructions);
+    // Используем простой alert - он работает везде
+    alert(message);
 }
 
-// Остальные функции остаются без изменений...
+// Настройка обработчиков событий
+function setupEventListeners() {
+    addWalletBtn.addEventListener('click', () => {
+        addWalletModal.classList.add('active');
+        walletForm.reset();
+        walletForm.onsubmit = handleAddWallet;
+    });
+
+    cancelBtn.addEventListener('click', () => {
+        addWalletModal.classList.remove('active');
+        walletForm.reset();
+        walletForm.onsubmit = null;
+    });
+
+    sortButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const sortType = btn.dataset.sort;
+            handleSortClick(sortType);
+        });
+    });
+
+    // ПРОСТОЙ ОБРАБОТЧИК ДЛЯ КНОПКИ УСТАНОВКИ
+    if (installBtn) {
+        installBtn.addEventListener('click', showInstallInstructions);
+    }
+
+    resetChangeBtn.addEventListener('click', resetBalanceChange);
+    shareBtn.addEventListener('click', shareApp);
+    clearAllBtn.addEventListener('click', showClearAllConfirmation);
+    confirmCancelBtn.addEventListener('click', hideClearAllConfirmation);
+    confirmDeleteBtn.addEventListener('click', clearAllData);
+    
+    selectedCurrencyElement.addEventListener('click', toggleCurrency);
+    
+    document.addEventListener('click', (e) => {
+        if (!addWalletModal.contains(e.target) && e.target !== addWalletBtn) {
+            addWalletModal.classList.remove('active');
+            walletForm.reset();
+            walletForm.onsubmit = null;
+        }
+        if (!confirmModal.contains(e.target) && e.target !== clearAllBtn) {
+            confirmModal.classList.remove('active');
+        }
+    });
+
+    confirmModal.addEventListener('click', (e) => {
+        if (e.target === confirmModal) {
+            hideClearAllConfirmation();
+        }
+    });
+}
+
+// Остальные функции остаются БЕЗ ИЗМЕНЕНИЙ...
 
 // Инициализация выбора цвета
 function initColorOptions() {
@@ -335,61 +358,6 @@ function saveWallets() {
     localStorage.setItem('moneyMuffinSort', currentSort);
     localStorage.setItem('moneyMuffinSortDirection', sortDirection);
     localStorage.setItem('moneyMuffinSelectedCurrency', selectedCurrency);
-}
-
-// Настройка обработчиков событий
-function setupEventListeners() {
-    addWalletBtn.addEventListener('click', () => {
-        addWalletModal.classList.add('active');
-        walletForm.reset();
-        walletForm.onsubmit = handleAddWallet;
-    });
-
-    cancelBtn.addEventListener('click', () => {
-        addWalletModal.classList.remove('active');
-        walletForm.reset();
-        walletForm.onsubmit = null;
-    });
-
-    sortButtons.forEach(btn => {
-        btn.addEventListener('click', () => {
-            const sortType = btn.dataset.sort;
-            handleSortClick(sortType);
-        });
-    });
-
-    addWalletModal.addEventListener('click', (e) => {
-        if (e.target === addWalletModal) {
-            addWalletModal.classList.remove('active');
-            walletForm.reset();
-            walletForm.onsubmit = null;
-        }
-    });
-
-    resetChangeBtn.addEventListener('click', resetBalanceChange);
-    shareBtn.addEventListener('click', shareApp);
-    clearAllBtn.addEventListener('click', showClearAllConfirmation);
-    confirmCancelBtn.addEventListener('click', hideClearAllConfirmation);
-    confirmDeleteBtn.addEventListener('click', clearAllData);
-    
-    selectedCurrencyElement.addEventListener('click', toggleCurrency);
-    
-    document.addEventListener('click', (e) => {
-        if (!addWalletModal.contains(e.target) && e.target !== addWalletBtn) {
-            addWalletModal.classList.remove('active');
-            walletForm.reset();
-            walletForm.onsubmit = null;
-        }
-        if (!confirmModal.contains(e.target) && e.target !== clearAllBtn) {
-            confirmModal.classList.remove('active');
-        }
-    });
-
-    confirmModal.addEventListener('click', (e) => {
-        if (e.target === confirmModal) {
-            hideClearAllConfirmation();
-        }
-    });
 }
 
 // Переключение валюты
