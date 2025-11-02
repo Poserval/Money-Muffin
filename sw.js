@@ -12,6 +12,7 @@ self.addEventListener('install', function(event) {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(function(cache) {
+        console.log('Caching files for offline use');
         return cache.addAll(urlsToCache);
       })
   );
@@ -21,6 +22,7 @@ self.addEventListener('fetch', function(event) {
   event.respondWith(
     caches.match(event.request)
       .then(function(response) {
+        // Возвращаем кэшированную версию или делаем сетевой запрос
         return response || fetch(event.request);
       })
   );
