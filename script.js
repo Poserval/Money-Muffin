@@ -1,63 +1,3 @@
-// PWA Functionality
-let deferredPrompt;
-
-// Регистрация сервис-воркера
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', function() {
-        navigator.serviceWorker.register('/sw.js')
-            .then(function(registration) {
-                console.log('ServiceWorker registration successful with scope: ', registration.scope);
-            })
-            .catch(function(error) {
-                console.log('ServiceWorker registration failed: ', error);
-            });
-    });
-}
-
-// Обработчик события установки PWA
-window.addEventListener('beforeinstallprompt', (e) => {
-    console.log('Before install prompt fired');
-    
-    // Предотвращаем автоматическое отображение подсказки
-    e.preventDefault();
-    
-    // Сохраняем событие для использования позже
-    deferredPrompt = e;
-    
-    // Активируем кнопку установки
-    installBtn.disabled = false;
-    installBtn.title = "Установить приложение";
-    
-    console.log('Install button activated');
-});
-
-// Обработчик клика по кнопке установки
-installBtn.addEventListener('click', async () => {
-    console.log('Install button clicked');
-    
-    if (deferredPrompt) {
-        // Показываем подсказку установки
-        deferredPrompt.prompt();
-        
-        // Ждем ответа пользователя
-        const { outcome } = await deferredPrompt.userChoice;
-        console.log(`User response to the install prompt: ${outcome}`);
-        
-        // Очищаем сохраненное событие
-        deferredPrompt = null;
-        
-        // Скрываем кнопку установки
-        installBtn.disabled = true;
-        installBtn.style.display = 'none';
-    }
-});
-
-// Отслеживание успешной установки
-window.addEventListener('appinstalled', (evt) => {
-    console.log('PWA was installed successfully');
-    installBtn.style.display = 'none';
-});
-
 // Данные приложения
 let wallets = [];
 let currentSort = 'amount';
@@ -96,23 +36,10 @@ const walletColors = [
 ];
 
 // DOM элементы
-const walletsContainer = document.getElementById('walletsContainer');
-const addWalletBtn = document.getElementById('addWalletBtn');
-const addWalletModal = document.getElementById('addWalletModal');
-const cancelBtn = document.getElementById('cancelBtn');
-const walletForm = document.getElementById('walletForm');
-const sortButtons = document.querySelectorAll('.sort-btn');
-const totalBalanceElement = document.getElementById('totalBalance');
-const balanceChangeElement = document.getElementById('balanceChange');
-const colorOptions = document.getElementById('colorOptions');
-const resetChangeBtn = document.getElementById('resetChangeBtn');
-const shareBtn = document.getElementById('shareBtn');
-const installBtn = document.getElementById('installBtn');
-const clearAllBtn = document.getElementById('clearAllBtn');
-const confirmModal = document.getElementById('confirmModal');
-const confirmCancelBtn = document.getElementById('confirmCancelBtn');
-const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-const selectedCurrencyElement = document.getElementById('selectedCurrency');
+let walletsContainer, addWalletBtn, addWalletModal, cancelBtn, walletForm;
+let sortButtons, totalBalanceElement, balanceChangeElement, colorOptions;
+let resetChangeBtn, shareBtn, installBtn, clearAllBtn, confirmModal;
+let confirmCancelBtn, confirmDeleteBtn, selectedCurrencyElement;
 
 // Начальные данные с порядком
 const initialWallets = [
@@ -211,11 +138,104 @@ let showBalanceChanges = {
 
 // Инициализация приложения
 document.addEventListener('DOMContentLoaded', function() {
+    initDOMElements();
     initColorOptions();
     loadWallets();
     setupEventListeners();
+    initPWA(); // Инициализируем PWA после загрузки DOM
 });
 
+// Инициализация DOM элементов
+function initDOMElements() {
+    walletsContainer = document.getElementById('walletsContainer');
+    addWalletBtn = document.getElementById('addWalletBtn');
+    addWalletModal = document.getElementById('addWalletModal');
+    cancelBtn = document.getElementById('cancelBtn');
+    walletForm = document.getElementById('walletForm');
+    sortButtons = document.querySelectorAll('.sort-btn');
+    totalBalanceElement = document.getElementById('totalBalance');
+    balanceChangeElement = document.getElementById('balanceChange');
+    colorOptions = document.getElementById('colorOptions');
+    resetChangeBtn = document.getElementById('resetChangeBtn');
+    shareBtn = document.getElementById('shareBtn');
+    installBtn = document.getElementById('installBtn');
+    clearAllBtn = document.getElementById('clearAllBtn');
+    confirmModal = document.getElementById('confirmModal');
+    confirmCancelBtn = document.getElementById('confirmCancelBtn');
+    confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
+    selectedCurrencyElement = document.getElementById('selectedCurrency');
+}
+
+// PWA Functionality
+function initPWA() {
+    let deferredPrompt;
+
+    // Регистрация сервис-воркера - ВРЕМЕННО ОТКЛЮЧИМ для отладки
+    /*
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            navigator.serviceWorker.register('/sw.js')
+                .then(function(registration) {
+                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                })
+                .catch(function(error) {
+                    console.log('ServiceWorker registration failed: ', error);
+                });
+        });
+    }
+    */
+
+    // Обработчик события установки PWA
+    window.addEventListener('beforeinstallprompt', (e) => {
+        console.log('Before install prompt fired');
+        
+        // Предотвращаем автоматическое отображение подсказки
+        e.preventDefault();
+        
+        // Сохраняем событие для использования позже
+        deferredPrompt = e;
+        
+        // Активируем кнопку установки
+        if (installBtn) {
+            installBtn.disabled = false;
+            installBtn.title = "Установить приложение";
+            console.log('Install button activated');
+        }
+    });
+
+    // Обработчик клика по кнопке установки
+    if (installBtn) {
+        installBtn.addEventListener('click', async () => {
+            console.log('Install button clicked');
+            
+            if (deferredPrompt) {
+                // Показываем подсказку установки
+                deferredPrompt.prompt();
+                
+                // Ждем ответа пользователя
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to the install prompt: ${outcome}`);
+                
+                // Очищаем сохраненное событие
+                deferredPrompt = null;
+                
+                // Скрываем кнопку установки
+                installBtn.disabled = true;
+                installBtn.style.display = 'none';
+            }
+        });
+    }
+
+    // Отслеживание успешной установки
+    window.addEventListener('appinstalled', (evt) => {
+        console.log('PWA was installed successfully');
+        if (installBtn) {
+            installBtn.style.display = 'none';
+        }
+    });
+}
+
+// Остальной код оставляем без изменений (все функции из предыдущей версии)
 // Инициализация выбора цвета
 function initColorOptions() {
     colorOptions.innerHTML = '';
