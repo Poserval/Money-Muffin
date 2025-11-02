@@ -29,6 +29,7 @@ body {
     max-width: 400px;
     margin: 0 auto;
     background: var(--surface);
+    min-height: 100vh;
 }
 
 /* Header Styles */
@@ -384,11 +385,17 @@ body {
 
 .wallets-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     gap: 12px;
     padding: 12px;
     background: var(--background);
     transition: all 0.3s ease;
+}
+
+/* Специальные стили для одного кошелька */
+.wallets-grid:has(> .wallet-item:only-child) {
+    grid-template-columns: minmax(160px, 300px);
+    justify-content: center;
 }
 
 .wallet-item {
@@ -754,6 +761,10 @@ body {
     .wallets-grid {
         grid-template-columns: 1fr;
         gap: 8px;
+    }
+    
+    .wallets-grid:has(> .wallet-item:only-child) {
+        grid-template-columns: minmax(140px, 280px);
     }
     
     .balance-amount {
