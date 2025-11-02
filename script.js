@@ -170,22 +170,18 @@ function initDOMElements() {
 function initPWA() {
     let deferredPrompt;
 
-    // Регистрация сервис-воркера - ВРЕМЕННО ОТКЛЮЧИМ для отладки
+    // ВРЕМЕННО отключаем сервис-воркер полностью
     /*
     if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-            navigator.serviceWorker.register('/sw.js')
-                .then(function(registration) {
-                    console.log('ServiceWorker registration successful with scope: ', registration.scope);
-                })
-                .catch(function(error) {
-                    console.log('ServiceWorker registration failed: ', error);
-                });
+        navigator.serviceWorker.getRegistrations().then(function(registrations) {
+            for(let registration of registrations) {
+                registration.unregister();
+            }
         });
     }
     */
 
-    // Обработчик события установки PWA
+    // Обработчик события установки PWA - только после инициализации DOM
     window.addEventListener('beforeinstallprompt', (e) => {
         console.log('Before install prompt fired');
         
@@ -195,16 +191,18 @@ function initPWA() {
         // Сохраняем событие для использования позже
         deferredPrompt = e;
         
-        // Активируем кнопку установки
-        if (installBtn) {
+        // Активируем кнопку установки - проверяем что элемент существует
+        if (installBtn && typeof installBtn !== 'undefined') {
             installBtn.disabled = false;
             installBtn.title = "Установить приложение";
             console.log('Install button activated');
+        } else {
+            console.log('Install button not found');
         }
     });
 
-    // Обработчик клика по кнопке установки
-    if (installBtn) {
+    // Обработчик клика по кнопке установки - проверяем что элемент существует
+    if (installBtn && typeof installBtn !== 'undefined') {
         installBtn.addEventListener('click', async () => {
             console.log('Install button clicked');
             
@@ -229,7 +227,7 @@ function initPWA() {
     // Отслеживание успешной установки
     window.addEventListener('appinstalled', (evt) => {
         console.log('PWA was installed successfully');
-        if (installBtn) {
+        if (installBtn && typeof installBtn !== 'undefined') {
             installBtn.style.display = 'none';
         }
     });
