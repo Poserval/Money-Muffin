@@ -273,20 +273,26 @@ function saveWallets() {
 function setupEventListeners() {
     addWalletBtn.addEventListener('click', () => {
         addWalletModal.classList.add('active');
+        // Сбрасываем форму при открытии
+        walletForm.reset();
+        // Устанавливаем обработчик для добавления кошелька
         walletForm.onsubmit = handleAddWallet;
     });
 
     cancelBtn.addEventListener('click', () => {
         addWalletModal.classList.remove('active');
         walletForm.reset();
+        // Сбрасываем обработчик
+        walletForm.onsubmit = null;
     });
 
-    walletForm.addEventListener('submit', function(e) {
-        e.preventDefault();
-        if (walletForm.onsubmit) {
-            walletForm.onsubmit(e);
-        }
-    });
+    // Убираем глобальный обработчик submit для формы
+    // walletForm.addEventListener('submit', function(e) {
+    //     e.preventDefault();
+    //     if (walletForm.onsubmit) {
+    //         walletForm.onsubmit(e);
+    //     }
+    // });
 
     sortButtons.forEach(btn => {
         btn.addEventListener('click', () => {
@@ -299,6 +305,8 @@ function setupEventListeners() {
         if (e.target === addWalletModal) {
             addWalletModal.classList.remove('active');
             walletForm.reset();
+            // Сбрасываем обработчик
+            walletForm.onsubmit = null;
         }
     });
 
@@ -315,6 +323,9 @@ function setupEventListeners() {
     document.addEventListener('click', (e) => {
         if (!addWalletModal.contains(e.target) && e.target !== addWalletBtn) {
             addWalletModal.classList.remove('active');
+            walletForm.reset();
+            // Сбрасываем обработчик
+            walletForm.onsubmit = null;
         }
         if (!confirmModal.contains(e.target) && e.target !== clearAllBtn) {
             confirmModal.classList.remove('active');
@@ -457,6 +468,8 @@ function handleAddWallet(e) {
     
     addWalletModal.classList.remove('active');
     walletForm.reset();
+    // Сбрасываем обработчик после успешного сохранения
+    walletForm.onsubmit = null;
     alert('Кошелек создан');
     
     return false;
@@ -841,6 +854,7 @@ function editWallet(walletId) {
 
     addWalletModal.classList.add('active');
 
+    // Устанавливаем обработчик для редактирования
     walletForm.onsubmit = function(e) {
         e.preventDefault();
         
@@ -883,8 +897,9 @@ function editWallet(walletId) {
         
         addWalletModal.classList.remove('active');
         walletForm.reset();
+        // Сбрасываем обработчик после успешного сохранения
+        walletForm.onsubmit = null;
         alert('Изменения внесены');
-        walletForm.onsubmit = handleAddWallet;
         
         return false;
     };
