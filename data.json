@@ -6,23 +6,32 @@
       "amount": 1000000,
       "currency": "RUB",
       "type": "deposit",
-      "lastUpdate": "2025-10-25"
+      "lastUpdate": "2025-10-25",
+      "color": "#007AFF",
+      "pinned": false,
+      "order": 1
     },
     {
       "id": 2, 
       "name": "Сбер (Вклад)",
-      "amount": 100000,
+      "amount": 100000.25,
       "currency": "RUB",
       "type": "deposit",
-      "lastUpdate": "2025-10-25"
+      "lastUpdate": "2025-10-25",
+      "color": "#4CD964",
+      "pinned": false,
+      "order": 2
     },
     {
       "id": 3,
       "name": "Наличка",
-      "amount": 240,
+      "amount": 240.75,
       "currency": "RUB", 
       "type": "cash",
-      "lastUpdate": "2025-10-31"
+      "lastUpdate": "2025-10-31",
+      "color": "#FFCC00",
+      "pinned": false,
+      "order": 3
     },
     {
       "id": 4,
@@ -30,23 +39,32 @@
       "amount": -25000,
       "currency": "RUB",
       "type": "credit",
-      "lastUpdate": "2025-10-25"
+      "lastUpdate": "2025-10-25",
+      "color": "#FF3B30",
+      "pinned": false,
+      "order": 4
     },
     {
       "id": 5,
       "name": "Альфа банк (кредитка)",
-      "amount": -50000,
+      "amount": -50000.15,
       "currency": "RUB",
       "type": "credit", 
-      "lastUpdate": "2025-10-25"
+      "lastUpdate": "2025-10-25",
+      "color": "#FF9500",
+      "pinned": false,
+      "order": 5
     },
     {
       "id": 6,
       "name": "Долларовый счет",
-      "amount": 1500,
+      "amount": 1500.99,
       "currency": "USD",
       "type": "account",
-      "lastUpdate": "2025-10-25"
+      "lastUpdate": "2025-10-25",
+      "color": "#5AC8FA",
+      "pinned": false,
+      "order": 6
     }
   ]
 }
