@@ -6,23 +6,26 @@
       "amount": 1000000,
       "currency": "RUB",
       "type": "deposit",
-      "lastUpdate": "2025-10-25"
+      "lastUpdate": "2025-10-25",
+      "isActive": true
     },
     {
-      "id": 2, 
-      "name": "Сбер (Вклад)",
+      "id": 2,
+      "name": "Сбер (Вклад)", 
       "amount": 100000,
       "currency": "RUB",
       "type": "deposit",
-      "lastUpdate": "2025-10-25"
+      "lastUpdate": "2025-10-25",
+      "isActive": true
     },
     {
       "id": 3,
       "name": "Наличка",
       "amount": 240,
-      "currency": "RUB", 
+      "currency": "RUB",
       "type": "cash",
-      "lastUpdate": "2025-10-31"
+      "lastUpdate": "2025-10-31",
+      "isActive": true
     },
     {
       "id": 4,
@@ -30,15 +33,17 @@
       "amount": -25000,
       "currency": "RUB",
       "type": "credit",
-      "lastUpdate": "2025-10-25"
+      "lastUpdate": "2025-10-25",
+      "isActive": true
     },
     {
       "id": 5,
       "name": "Альфа банк (кредитка)",
       "amount": -50000,
       "currency": "RUB",
-      "type": "credit", 
-      "lastUpdate": "2025-10-25"
+      "type": "credit",
+      "lastUpdate": "2025-10-25",
+      "isActive": true
     },
     {
       "id": 6,
@@ -46,7 +51,14 @@
       "amount": 1500,
       "currency": "USD",
       "type": "account",
-      "lastUpdate": "2025-10-25"
+      "lastUpdate": "2025-10-25",
+      "isActive": true
     }
-  ]
+  ],
+  "meta": {
+    "version": "1.0",
+    "lastUpdated": "2025-10-31",
+    "totalWallets": 6,
+    "currencies": ["RUB", "USD"]
+  }
 }
