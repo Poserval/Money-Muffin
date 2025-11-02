@@ -6,6 +6,11 @@ let selectedCurrency = 'RUB';
 let isDragging = false;
 let draggedWalletId = null;
 
+// Константы для анимаций и таймаутов
+const ANIMATION_DURATION = 150;
+const TOUCH_DELAY = 200;
+const TOUCH_THRESHOLD = 10;
+
 // Символы валют
 const currencySymbols = {
     'RUB': '₽',
@@ -47,7 +52,6 @@ const clearAllBtn = document.getElementById('clearAllBtn');
 const confirmModal = document.getElementById('confirmModal');
 const confirmCancelBtn = document.getElementById('confirmCancelBtn');
 const confirmDeleteBtn = document.getElementById('confirmDeleteBtn');
-const currencySelector = document.getElementById('currencySelector');
 const selectedCurrencyElement = document.getElementById('selectedCurrency');
 
 // Начальные данные с порядком
@@ -285,14 +289,6 @@ function setupEventListeners() {
         walletForm.onsubmit = null;
     });
 
-    // Убираем глобальный обработчик submit для формы
-    // walletForm.addEventListener('submit', function(e) {
-    //     e.preventDefault();
-    //     if (walletForm.onsubmit) {
-    //         walletForm.onsubmit(e);
-    //     }
-    // });
-
     sortButtons.forEach(btn => {
         btn.addEventListener('click', () => {
             const sortType = btn.dataset.sort;
@@ -365,7 +361,7 @@ function toggleCurrency() {
         setTimeout(() => {
             selectedCurrencyElement.classList.remove('changing');
         }, 100);
-    }, 150);
+    }, ANIMATION_DURATION);
 }
 
 function updateCurrencyDisplay() {
@@ -729,7 +725,7 @@ function setupDragAndDrop(walletElement, walletId) {
                 isDragging = true;
                 draggedWalletId = walletId;
             }
-        }, 200); // Задержка для отличия от обычного касания
+        }, TOUCH_DELAY);
     });
 
     walletElement.addEventListener('touchmove', (e) => {
@@ -741,7 +737,7 @@ function setupDragAndDrop(walletElement, walletId) {
         const deltaY = touch.clientY - touchStartY;
         
         // Если перемещение достаточно большое, начинаем перетаскивание
-        if (Math.abs(deltaX) > 10 || Math.abs(deltaY) > 10) {
+        if (Math.abs(deltaX) > TOUCH_THRESHOLD || Math.abs(deltaY) > TOUCH_THRESHOLD) {
             walletElement.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
         }
     });
