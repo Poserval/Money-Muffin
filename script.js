@@ -27,8 +27,7 @@ const currencyNames = {
 // Цвета радуги + черный и серый
 const walletColors = [
     '#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF', '#5856D6',
-    '#FF2D55', '#AF52DE', '#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA',
-    '#007AFF', '#5856D6', '#1D1D1F', '#8E8E93'
+    '#FF2D55', '#AF52DE', '#1D1D1F', '#8E8E93'
 ];
 
 // DOM элементы
