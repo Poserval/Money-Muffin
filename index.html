@@ -3,72 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Money Muffin</title>
+    <title>Money Muffin - Учет финансов</title>
     
     <!-- PWA Meta Tags -->
     <meta name="theme-color" content="#007AFF">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Money Muffin">
-    <meta name="description" content="Учет финансов - просто и удобно">
+    <meta name="description" content="Простое и удобное приложение для учета личных финансов">
+    <meta name="keywords" content="финансы, деньги, бюджет, кошельки, учет">
 
-    <!-- Icons for Apple devices -->
+    <!-- Icons -->
     <link rel="apple-touch-icon" href="icons/icon-152x152.png">
+    <link rel="icon" type="image/png" href="icons/icon-192x192.png">
 
     <!-- Manifest -->
     <link rel="manifest" href="manifest.json">
     
+    <!-- Preload critical CSS -->
+    <link rel="preload" href="style.css" as="style">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <header class="header">
+    <div class="container" role="application" aria-label="Приложение для учета финансов Money Muffin">
+        <header class="header" role="banner">
             <div class="app-header">
                 <h1 class="app-title">Money Muffin</h1>
             </div>
             
-            <div class="total-balance-section">
+            <section class="total-balance-section" aria-labelledby="totalBalance">
                 <div class="total-balance">
-                    <div class="balance-label">Общий баланс</div>
+                    <div class="balance-label" id="balanceLabel">Общий баланс</div>
                     <div class="balance-right">
                         <div class="balance-amount-container">
-                            <div class="balance-amount" id="totalBalance">1 025 240</div>
-                            <div class="currency-selector" id="currencySelector">
+                            <div class="balance-amount" id="totalBalance" aria-live="polite" aria-atomic="true">1 025 240</div>
+                            <div class="currency-selector" id="currencySelector" role="button" aria-haspopup="true" aria-expanded="false" aria-label="Выбор валюты">
                                 <div class="selected-currency" id="selectedCurrency">₽</div>
                             </div>
                         </div>
                         <div class="balance-change-container">
-                            <div class="balance-change" id="balanceChange">-13 767 ₽</div>
-                            <button class="reset-change-btn" id="resetChangeBtn" title="Сбросить изменение">↺</button>
+                            <div class="balance-change" id="balanceChange" aria-live="polite">-13 767 ₽</div>
+                            <button class="reset-change-btn" id="resetChangeBtn" aria-label="Сбросить изменение баланса" title="Сбросить изменение">↺</button>
                         </div>
                     </div>
                 </div>
-            </div>
+            </section>
         </header>
 
-        <main class="main">
-            <section class="wallets-section">
-                <div class="section-header">
-                    <h2>Мои кошельки</h2>
-                    <button class="add-btn" id="addWalletBtn">+ Добавить</button>
-                </div>
+        <main class="main" role="main">
+            <section class="wallets-section" aria-labelledby="walletsHeading">
+                <header class="section-header">
+                    <h2 id="walletsHeading">Мои кошельки</h2>
+                    <button class="add-btn" id="addWalletBtn" aria-label="Добавить новый кошелек">+ Добавить</button>
+                </header>
 
-                <div class="sort-options">
+                <div class="sort-options" role="toolbar" aria-label="Опции сортировки и управления">
                     <div class="sort-left">
-                        <span>Сортировать:</span>
-                        <div class="sort-buttons">
-                            <button class="sort-btn" data-sort="name">Имя</button>
-                            <button class="sort-btn active" data-sort="amount">Сумма ▼</button>
+                        <span class="sort-label">Сортировать:</span>
+                        <div class="sort-buttons" role="group" aria-label="Типы сортировки">
+                            <button class="sort-btn" data-sort="name" aria-pressed="false">Имя</button>
+                            <button class="sort-btn active" data-sort="amount" aria-pressed="true">Сумма ▼</button>
                         </div>
                     </div>
-                    <div class="sort-actions">
-                        <button class="action-btn" id="shareBtn" title="Поделиться приложением">📤</button>
-                        <button class="action-btn" id="installBtn" title="Установить приложение">📱</button>
-                        <button class="action-btn danger" id="clearAllBtn" title="Удалить все данные">📛</button>
+                    <div class="sort-actions" role="group" aria-label="Действия с приложением">
+                        <button class="action-btn" id="shareBtn" aria-label="Поделиться приложением" title="Поделиться приложением">📤</button>
+                        <button class="action-btn" id="installBtn" aria-label="Установить приложение" title="Установить приложение">📱</button>
+                        <button class="action-btn danger" id="clearAllBtn" aria-label="Удалить все данные" title="Удалить все данные">📛</button>
                     </div>
                 </div>
 
-                <div class="wallets-container" id="walletsContainer">
+                <div class="wallets-container" id="walletsContainer" role="list" aria-label="Список кошельков">
                     <!-- Кошельки будут загружаться через JavaScript -->
                 </div>
             </section>
@@ -76,24 +80,24 @@
     </div>
 
     <!-- Модальное окно для добавления кошелька -->
-    <div class="modal" id="addWalletModal">
+    <div class="modal" id="addWalletModal" role="dialog" aria-labelledby="addWalletTitle" aria-hidden="true">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3 aria-label="Добавление нового кошелька">Добавить кошелек</h3>
-            </div>
+            <header class="modal-header">
+                <h3 id="addWalletTitle">Добавить кошелек</h3>
+            </header>
             <div class="modal-body">
-                <form id="walletForm">
+                <form id="walletForm" aria-labelledby="addWalletTitle">
                     <div class="form-group">
                         <label for="walletName">Название:</label>
-                        <input type="text" id="walletName" required>
+                        <input type="text" id="walletName" required aria-required="true" autocomplete="off">
                     </div>
                     <div class="form-group">
                         <label for="walletAmount">Сумма:</label>
-                        <input type="number" id="walletAmount" step="any" placeholder="Введите сумму" required>
+                        <input type="number" id="walletAmount" step="any" placeholder="Введите сумму" required aria-required="true" inputmode="decimal">
                     </div>
                     <div class="form-group">
                         <label for="walletCurrency">Валюта:</label>
-                        <select id="walletCurrency" required>
+                        <select id="walletCurrency" required aria-required="true">
                             <option value="RUB">Рубль (₽)</option>
                             <option value="USD">Доллар ($)</option>
                             <option value="EUR">Евро (€)</option>
@@ -103,7 +107,7 @@
                     </div>
                     <div class="form-group">
                         <label for="walletType">Тип:</label>
-                        <select id="walletType" required>
+                        <select id="walletType" required aria-required="true">
                             <option value="deposit">Вклад</option>
                             <option value="credit">Кредитная карта</option>
                             <option value="cash">Наличные</option>
@@ -111,8 +115,8 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Цвет кошелька:</label>
-                        <div class="color-options" id="colorOptions">
+                        <label id="colorLabel">Цвет кошелька:</label>
+                        <div class="color-options" id="colorOptions" role="radiogroup" aria-labelledby="colorLabel">
                             <!-- Цвета будут добавлены через JavaScript -->
                         </div>
                     </div>
@@ -126,22 +130,24 @@
     </div>
 
     <!-- Модальное окно подтверждения удаления -->
-    <div class="modal" id="confirmModal">
+    <div class="modal" id="confirmModal" role="alertdialog" aria-labelledby="confirmTitle" aria-describedby="confirmDescription" aria-hidden="true">
         <div class="modal-content">
-            <div class="modal-header">
-                <h3 aria-label="Подтверждение удаления данных">⚠️ Внимание!</h3>
-            </div>
+            <header class="modal-header">
+                <h3 id="confirmTitle">⚠️ Внимание!</h3>
+            </header>
             <div class="modal-body">
-                <p>Вы уверены, что хотите удалить ВСЕ данные?</p>
-                <p class="warning-text">Это действие удалит все кошельки и историю изменений. Восстановление будет невозможно!</p>
+                <p id="confirmDescription">Вы уверены, что хотите удалить ВСЕ данные?</p>
+                <p class="warning-text" aria-live="assertive">Это действие удалит все кошельки и историю изменений. Восстановление будет невозможно!</p>
                 <div class="form-actions">
-                    <button type="button" class="cancel-btn" id="confirmCancelBtn">Отмена</button>
+                    <button type="button" class="cancel-btn" id="confirmCancelBtn" autofocus>Отмена</button>
                     <button type="button" class="save-btn danger" id="confirmDeleteBtn">Удалить всё</button>
                 </div>
             </div>
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <!-- Preload JavaScript -->
+    <link rel="preload" href="script.js" as="script">
+    <script src="script.js" defer></script>
 </body>
 </html>
