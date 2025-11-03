@@ -390,7 +390,8 @@ body {
     padding: 12px;
     background: var(--background);
     transition: all 0.3s ease;
-    justify-items: start;
+    justify-items: stretch;
+    align-items: start;
 }
 
 .wallet-item {
