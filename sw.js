@@ -1,27 +1,35 @@
-const CACHE_NAME = 'money-muffin-v1.2';
+// sw.js - Полный код Service Worker
+const CACHE_NAME = 'money-muffin-v2.0';
 const urlsToCache = [
   './',
   './index.html',
-  './style.css', 
+  './style.css',
   './script.js',
   './manifest.json',
-  './icons/icon-192x192.png'
+  './icons/icon-72x72.png',
+  './icons/icon-96x96.png',
+  './icons/icon-128x128.png',
+  './icons/icon-144x144.png',
+  './icons/icon-152x152.png',
+  './icons/icon-192x192.png',
+  './icons/icon-384x384.png',
+  './icons/icon-512x512.png'
 ];
 
 // Установка Service Worker
 self.addEventListener('install', function(event) {
-  console.log('Service Worker: Installing...');
+  console.log('💰 Service Worker: Установка Money Muffin...');
   
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(function(cache) {
-        console.log('Service Worker: Caching app shell');
+        console.log('💰 Service Worker: Кэшируем файлы приложения');
         return cache.addAll(urlsToCache).catch(function(error) {
-          console.warn('Service Worker: Some files failed to cache:', error);
+          console.log('💰 Service Worker: Ошибка кэширования:', error);
         });
       })
       .then(function() {
-        console.log('Service Worker: Skip waiting for activation');
+        console.log('💰 Service Worker: Пропускаем ожидание активации');
         return self.skipWaiting();
       })
   );
@@ -29,20 +37,20 @@ self.addEventListener('install', function(event) {
 
 // Активация Service Worker
 self.addEventListener('activate', function(event) {
-  console.log('Service Worker: Activating...');
+  console.log('💰 Service Worker: Активация Money Muffin...');
   
   event.waitUntil(
     caches.keys().then(function(cacheNames) {
       return Promise.all(
         cacheNames.map(function(cacheName) {
           if (cacheName !== CACHE_NAME) {
-            console.log('Service Worker: Deleting old cache', cacheName);
+            console.log('💰 Service Worker: Удаляем старый кэш', cacheName);
             return caches.delete(cacheName);
           }
         })
       );
     }).then(function() {
-      console.log('Service Worker: Claiming clients');
+      console.log('💰 Service Worker: Активируем для всех клиентов');
       return self.clients.claim();
     })
   );
@@ -50,52 +58,41 @@ self.addEventListener('activate', function(event) {
 
 // Обработка запросов
 self.addEventListener('fetch', function(event) {
-  // Пропускаем не-GET запросы и chrome-extension
-  if (event.request.method !== 'GET' || event.request.url.startsWith('chrome-extension://')) {
-    return;
-  }
+  // Пропускаем не-GET запросы
+  if (event.request.method !== 'GET') return;
 
   event.respondWith(
     caches.match(event.request)
       .then(function(response) {
-        // Возвращаем кэшированную версию, если есть
+        // Возвращаем кэшированную версию если есть
         if (response) {
-          console.log('Service Worker: Serving from cache:', event.request.url);
+          console.log('💰 Service Worker: Загружаем из кэша:', event.request.url);
           return response;
         }
 
-        // Делаем сетевой запрос
-        console.log('Service Worker: Fetching from network:', event.request.url);
+        // Иначе делаем сетевой запрос
+        console.log('💰 Service Worker: Загружаем из сети:', event.request.url);
         return fetch(event.request)
           .then(function(networkResponse) {
-            // Кэшируем только успешные ответы и те, что относятся к нашему origin
-            if (networkResponse && networkResponse.status === 200 && 
-                networkResponse.url.startsWith(self.location.origin)) {
-              
+            // Кэшируем только успешные ответы
+            if (networkResponse && networkResponse.status === 200) {
               const responseToCache = networkResponse.clone();
               caches.open(CACHE_NAME)
                 .then(function(cache) {
-                  console.log('Service Worker: Caching new resource:', event.request.url);
                   cache.put(event.request, responseToCache);
-                })
-                .catch(function(error) {
-                  console.warn('Service Worker: Cache put failed:', error);
+                  console.log('💰 Service Worker: Закэширован новый ресурс:', event.request.url);
                 });
             }
-            
             return networkResponse;
           })
           .catch(function(error) {
-            console.warn('Service Worker: Fetch failed:', error);
-            
+            console.log('💰 Service Worker: Ошибка сети:', error);
             // Для HTML-страниц возвращаем запасную страницу
-            if (event.request.destination === 'document' || 
-                event.request.headers.get('accept').includes('text/html')) {
+            if (event.request.destination === 'document') {
               return caches.match('./index.html');
             }
-            
             // Для других типов возвращаем ошибку
-            return new Response('Network error happened', {
+            return new Response('Приложение оффлайн', {
               status: 408,
               headers: { 'Content-Type': 'text/plain' }
             });
@@ -104,7 +101,7 @@ self.addEventListener('fetch', function(event) {
   );
 });
 
-// Обработка сообщений от основного потока
+// Обработка сообщений от приложения
 self.addEventListener('message', function(event) {
   if (event.data && event.data.type === 'SKIP_WAITING') {
     self.skipWaiting();
