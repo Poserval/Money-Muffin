@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Money Muffin - Учет финансов</title>
     
     <!-- PWA Meta Tags -->
@@ -20,6 +20,8 @@
 
     <!-- Icons -->
     <link rel="apple-touch-icon" href="icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-192x192.png">
     <link rel="icon" type="image/png" href="icons/icon-192x192.png">
     <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
     <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512x512.png">
@@ -34,6 +36,21 @@
     <!-- Preload critical CSS -->
     <link rel="preload" href="style.css" as="style">
     <link rel="stylesheet" href="style.css">
+    
+    <!-- Service Worker Registration -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('./sw.js')
+                    .then(function(registration) {
+                        console.log('💰 Service Worker зарегистрирован:', registration);
+                    })
+                    .catch(function(error) {
+                        console.log('💰 Ошибка регистрации Service Worker:', error);
+                    });
+            });
+        }
+    </script>
 </head>
 <body>
     <div class="container" role="application" aria-label="Приложение для учета финансов Money Muffin">
