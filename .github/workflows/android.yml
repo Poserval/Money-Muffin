@@ -17,16 +17,15 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: '18'
-        cache: 'npm'
         
     - name: Install dependencies
-  run: npm install --package-lock=false
+      run: npm install --package-lock=false
       
     - name: Build web assets
       run: npm run build
       
     - name: Generate Android project
-      run: npm run cap:android
+      run: npx cap add android && npx cap sync android
       
     - name: Setup Java
       uses: actions/setup-java@v4
@@ -40,9 +39,10 @@ jobs:
         chmod +x gradlew
         ./gradlew assembleDebug --no-daemon
       
-    - name: Upload APK artifact
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: money-muffin-apk
         path: android/app/build/outputs/apk/debug/app-debug.apk
         retention-days: 7
+
