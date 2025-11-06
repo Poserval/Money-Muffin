@@ -21,19 +21,41 @@ jobs:
     - name: Install dependencies
       run: npm install --package-lock=false
       
-    - name: Prepare capacitor resources
-      run: |
-        echo "🔄 Подготавливаем ресурсы из существующих иконок..."
-        mkdir -p resources
-        cp ./icons/icon-512x512.png ./resources/icon.png
-        npx capacitor-assets generate
-        echo "✅ Ресурсы сгенерированы!"
-      
     - name: Build web assets
       run: npm run build
       
     - name: Generate Android project
       run: npx cap add android && npx cap sync android
+      
+    - name: Replace ALL launcher icons
+      run: |
+        echo "🔄 Заменяем ВСЕ иконки запуска..."
+        # Создаем папки если их нет
+        mkdir -p android/app/src/main/res/mipmap-hdpi
+        mkdir -p android/app/src/main/res/mipmap-mdpi
+        mkdir -p android/app/src/main/res/mipmap-xhdpi
+        mkdir -p android/app/src/main/res/mipmap-xxhdpi
+        mkdir -p android/app/src/main/res/mipmap-xxxhdpi
+        
+        # Копируем нашу иконку во ВСЕ возможные места
+        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-hdpi/ic_launcher.png
+        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
+        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
+        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
+        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
+        
+        # Также для круглых версий
+        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
+        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
+        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
+        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
+        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
+        
+        # И для адаптивных иконок (новые версии Android)
+        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml 2>/dev/null || true
+        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml 2>/dev/null || true
+        
+        echo "✅ Все иконки заменены!"
       
     - name: Setup Java
       uses: actions/setup-java@v4
