@@ -39,7 +39,8 @@ jobs:
     - name: Create signing config
       run: |
         echo "🔐 Создаем ключ и конфиг подписи..."
-        # Создаем ключ
+        # Создаем ключ в корне android
+        cd android
         keytool -genkeypair -v \
           -keystore release.keystore \
           -alias release \
@@ -50,8 +51,8 @@ jobs:
           -keypass "123456" \
           -dname "CN=Money Muffin, O=MoneyMuffin, C=RU"
         
-        # Создаем файл конфигурации подписи
-        cat > android/app/signing-config.gradle << 'EOF'
+        # Создаем файл конфигурации подписи в app
+        cat > app/signing-config.gradle << 'EOF'
         android {
             signingConfigs {
                 release {
@@ -70,7 +71,7 @@ jobs:
         EOF
         
         # Добавляем подключение конфига в build.gradle
-        echo "apply from: 'signing-config.gradle'" >> android/app/build.gradle
+        echo "apply from: 'signing-config.gradle'" >> app/build.gradle
         echo "✅ Конфиг подписи создан!"
       
     - name: Setup Java
@@ -81,9 +82,9 @@ jobs:
         
     - name: Build Release APK
       run: |
-        cd android/app
-        chmod +x ../../gradlew
-        ../../gradlew assembleRelease --no-daemon
+        cd android
+        chmod +x gradlew
+        ./gradlew assembleRelease --no-daemon
       
     - name: Upload APK
       uses: actions/upload-artifact@v4
@@ -91,3 +92,4 @@ jobs:
         name: money-muffin-release-apk
         path: android/app/build/outputs/apk/release/app-release.apk
         retention-days: 7
+        
