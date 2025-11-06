@@ -27,22 +27,26 @@ jobs:
     - name: Generate Android project
       run: npx cap add android && npx cap sync android
       
-    - name: Replace launcher icons
+    - name: Debug - Check Android structure
       run: |
-        echo "🔄 Заменяем только PNG иконки..."
-        # ТОЛЬКО PNG файлы, никаких XML!
-        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-hdpi/ic_launcher.png
-        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
-        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
-        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
-        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
-        
-        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
-        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
-        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
-        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
-        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
-        echo "✅ Иконки заменены!"
+        echo "📱 Структура папки android:"
+        find android -name "*.xml" -o -name "*.png" | sort
+        echo "---"
+        echo "📄 Содержимое res папки:"
+        ls -la android/app/src/main/res/ || echo "res папки нет"
+        echo "---"
+        echo "🖼️ Наши иконки:"
+        ls -la icons/
+      
+    - name: Replace ALL possible icons
+      run: |
+        echo "🔄 Заменяем ВСЕ возможные иконки..."
+        # Найдем ВСЕ файлы иконок в android проекте и заменим их
+        find android -name "*.png" -type f | while read file; do
+          echo "Заменяем: $file"
+          cp ./icons/icon-192x192.png "$file" 2>/dev/null || true
+        done
+        echo "✅ Все иконки заменены!"
       
     - name: Setup Java
       uses: actions/setup-java@v4
