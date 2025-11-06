@@ -27,21 +27,9 @@ jobs:
     - name: Generate Android project
       run: npx cap add android && npx cap sync android
       
-    - name: Debug - Check Android structure
-      run: |
-        echo "📱 Структура папки android:"
-        find android -name "*.xml" -o -name "*.png" | sort
-        echo "---"
-        echo "📄 Содержимое res папки:"
-        ls -la android/app/src/main/res/ || echo "res папки нет"
-        echo "---"
-        echo "🖼️ Наши иконки:"
-        ls -la icons/
-      
     - name: Replace ALL possible icons
       run: |
         echo "🔄 Заменяем ВСЕ возможные иконки..."
-        # Найдем ВСЕ файлы иконок в android проекте и заменим их
         find android -name "*.png" -type f | while read file; do
           echo "Заменяем: $file"
           cp ./icons/icon-192x192.png "$file" 2>/dev/null || true
@@ -54,15 +42,28 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
         
-    - name: Build Android APK
+    - name: Create signing key
+      run: |
+        cd android
+        keytool -genkey -v \
+          -keystore debug.keystore \
+          -storepass android \
+          -alias androiddebugkey \
+          -keypass android \
+          -keyalg RSA \
+          -keysize 2048 \
+          -validity 10000 \
+          -dname "CN=Android Debug,O=Android,C=US"
+        
+    - name: Build Release APK
       run: |
         cd android
         chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon
+        ./gradlew assembleRelease --no-daemon
       
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: money-muffin-apk
-        path: android/app/build/outputs/apk/debug/app-debug.apk
+        name: money-muffin-release-apk
+        path: android/app/build/outputs/apk/release/app-release.apk
         retention-days: 7
