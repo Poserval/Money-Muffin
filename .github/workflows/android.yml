@@ -36,27 +36,16 @@ jobs:
         done
         echo "✅ Все иконки заменены!"
       
-    - name: Disable debuggable flag
-      run: |
-        echo "🔄 Отключаем debuggable в манифесте..."
-        cp android/app/src/main/AndroidManifest.xml android/app/src/main/AndroidManifest.xml.backup
-        if grep -q 'android:debuggable="true"' android/app/src/main/AndroidManifest.xml; then
-          sed -i 's/android:debuggable="true"/android:debuggable="false"/g' android/app/src/main/AndroidManifest.xml
-          echo "✅ Debuggable изменен на false"
-        else
-          sed -i '/<application/s/$/ android:debuggable="false"/' android/app/src/main/AndroidManifest.xml
-          echo "✅ Debuggable добавлен как false"
-        fi
-      
     - name: Setup Java
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: '17'
         
-    - name: Create release keystore
+    - name: Create signing config
       run: |
         cd android
+        # Создаем ключ
         keytool -genkey -v \
           -keystore release.keystore \
           -alias release \
@@ -65,16 +54,32 @@ jobs:
           -validity 10000 \
           -storepass 123456 \
           -keypass 123456 \
-          -dname "CN=Money Muffin, OU=Development, O=MoneyMuffin, C=RU"
+          -dname "CN=Money Muffin, O=MoneyMuffin, C=RU"
+        
+        # Создаем signing config
+        cat > app/release-signing-config.gradle << 'EOF'
+        android {
+            signingConfigs {
+                release {
+                    storeFile file("release.keystore")
+                    storePassword "123456"
+                    keyAlias "release"
+                    keyPassword "123456"
+                }
+            }
+            buildTypes {
+                release {
+                    signingConfig signingConfigs.release
+                }
+            }
+        }
+        EOF
       
     - name: Build Release APK
       run: |
         cd android
         chmod +x gradlew
-        ./gradlew assembleRelease \
-          -Prelease.keystore=release.keystore \
-          -Prelease.alias=release \
-          -Prelease.password=123456
+        ./gradlew assembleRelease --no-daemon
       
     - name: Upload APK
       uses: actions/upload-artifact@v4
