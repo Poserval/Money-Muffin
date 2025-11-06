@@ -144,7 +144,15 @@ document.addEventListener('DOMContentLoaded', function() {
         initColorOptions();
         loadWallets();
         setupEventListeners();
-        initPWA();
+        
+        // В Capacitor отключаем PWA функции
+        if (window.isCapacitor) {
+            console.log('Capacitor detected - disabling PWA features');
+            if (installBtn) installBtn.style.display = 'none';
+        } else {
+            initPWA();
+        }
+        
         console.log('App initialized successfully');
     } catch (error) {
         console.error('Error during app initialization:', error);
@@ -651,6 +659,18 @@ function renderWallets() {
     const groupedWallets = groupWalletsByCurrency(sortedWallets);
     
     walletsContainer.innerHTML = '';
+
+    // Если нет кошельков - показываем пустое состояние
+    if (sortedWallets.length === 0) {
+        const emptyState = document.createElement('div');
+        emptyState.className = 'empty-state';
+        emptyState.innerHTML = `
+            <p>💰 Кошельков пока нет</p>
+            <p>Нажмите "+ Добавить" чтобы создать первый кошелек</p>
+        `;
+        walletsContainer.appendChild(emptyState);
+        return;
+    }
 
     const currencyOrder = ['RUB', 'USD', 'EUR', 'CNY', 'JPY'];
     
