@@ -39,8 +39,8 @@ jobs:
     - name: Create signing config
       run: |
         echo "🔐 Создаем ключ и конфиг подписи..."
-        # Создаем ключ в корне android
-        cd android
+        # Создаем ключ в папке app
+        cd android/app
         keytool -genkeypair -v \
           -keystore release.keystore \
           -alias release \
@@ -51,8 +51,8 @@ jobs:
           -keypass "123456" \
           -dname "CN=Money Muffin, O=MoneyMuffin, C=RU"
         
-        # Создаем файл конфигурации подписи в app
-        cat > app/signing-config.gradle << 'EOF'
+        # Создаем файл конфигурации подписи
+        cat > signing-config.gradle << 'EOF'
         android {
             signingConfigs {
                 release {
@@ -71,7 +71,7 @@ jobs:
         EOF
         
         # Добавляем подключение конфига в build.gradle
-        echo "apply from: 'signing-config.gradle'" >> app/build.gradle
+        echo "apply from: 'signing-config.gradle'" >> build.gradle
         echo "✅ Конфиг подписи создан!"
       
     - name: Setup Java
