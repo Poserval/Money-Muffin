@@ -36,23 +36,42 @@ jobs:
         done
         echo "✅ Все иконки заменены!"
       
-    - name: Prepare signing
+    - name: Create signing config
       run: |
-        echo "🔐 Подготавливаем подпись..."
-        # Создаем временный ключ для подписи
+        echo "🔐 Создаем ключ и конфиг подписи..."
+        # Создаем ключ
         keytool -genkeypair -v \
-          -keystore money-muffin.jks \
-          -alias money_muffin \
+          -keystore release.keystore \
+          -alias release \
           -keyalg RSA \
           -keysize 2048 \
           -validity 10000 \
-          -storepass "MySecurePass123!" \
-          -keypass "MySecurePass123!" \
+          -storepass "123456" \
+          -keypass "123456" \
           -dname "CN=Money Muffin, O=MoneyMuffin, C=RU"
         
-        # Копируем ключ в Android проект
-        cp money-muffin.jks android/app/
-        echo "✅ Ключ создан и скопирован!"
+        # Создаем файл конфигурации подписи
+        cat > android/app/signing-config.gradle << 'EOF'
+        android {
+            signingConfigs {
+                release {
+                    storeFile file("release.keystore")
+                    storePassword "123456"
+                    keyAlias "release"
+                    keyPassword "123456"
+                }
+            }
+            buildTypes {
+                release {
+                    signingConfig signingConfigs.release
+                }
+            }
+        }
+        EOF
+        
+        # Добавляем подключение конфига в build.gradle
+        echo "apply from: 'signing-config.gradle'" >> android/app/build.gradle
+        echo "✅ Конфиг подписи создан!"
       
     - name: Setup Java
       uses: actions/setup-java@v4
@@ -62,13 +81,9 @@ jobs:
         
     - name: Build Release APK
       run: |
-        cd android
-        chmod +x gradlew
-        ./gradlew assembleRelease \
-          -Pandroid.injected.signing.store.file=money-muffin.jks \
-          -Pandroid.injected.signing.store.password=MySecurePass123! \
-          -Pandroid.injected.signing.key.alias=money_muffin \
-          -Pandroid.injected.signing.key.password=MySecurePass123!
+        cd android/app
+        chmod +x ../../gradlew
+        ../../gradlew assembleRelease --no-daemon
       
     - name: Upload APK
       uses: actions/upload-artifact@v4
