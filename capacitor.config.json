@@ -2,15 +2,18 @@
   "appId": "com.moneymuffin.app",
   "appName": "Money Muffin",
   "webDir": ".",
+  "bundledWebRuntime": false,
   "server": {
     "androidScheme": "https",
-    "hostname": "localhost"
+    "hostname": "localhost",
+    "cleartext": true
   },
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 2000,
       "launchAutoHide": true,
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#ffffff",
+      "showSpinner": false
     }
   }
 }
