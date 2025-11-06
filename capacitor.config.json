@@ -1,5 +1,5 @@
 {
-  "appId": "com.moneymuffin.app",
+  "appId": "com.moneymuffin.app", 
   "appName": "Money Muffin",
   "webDir": "dist",
   "server": {
