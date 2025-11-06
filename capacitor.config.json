@@ -1,19 +1,36 @@
-{
-  "appId": "com.moneymuffin.app",
-  "appName": "Money Muffin",
-  "webDir": ".",
-  "bundledWebRuntime": false,
-  "server": {
-    "androidScheme": "https",
-    "hostname": "localhost",
-    "cleartext": true
-  },
-  "plugins": {
-    "SplashScreen": {
-      "launchShowDuration": 2000,
-      "launchAutoHide": true,
-      "backgroundColor": "#ffffff",
-      "showSpinner": false
-    }
-  }
-}
+name: Build Android APK
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        
+    - name: Install dependencies
+      run: npm install --package-lock=false
+      
+    - name: Build web assets
+      run: npm run build
+      
+    - name: Generate Android project
+      run: npx cap add android && npx cap sync android
+      
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        
+    - name: Build Android APK
