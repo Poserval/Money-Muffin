@@ -21,26 +21,19 @@ jobs:
     - name: Install dependencies
       run: npm install --package-lock=false
       
+    - name: Prepare capacitor resources
+      run: |
+        echo "🔄 Подготавливаем ресурсы из существующих иконок..."
+        mkdir -p resources
+        cp ./icons/icon-512x512.png ./resources/icon.png
+        npx capacitor-assets generate
+        echo "✅ Ресурсы сгенерированы!"
+      
     - name: Build web assets
       run: npm run build
       
     - name: Generate Android project
       run: npx cap add android && npx cap sync android
-      
-    - name: Copy custom icons
-      run: |
-        echo "🔄 Копируем кастомные иконки..."
-        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-hdpi/ic_launcher.png
-        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-mdpi/ic_launcher.png
-        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-xhdpi/ic_launcher.png
-        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher.png
-        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher.png
-        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-hdpi/ic_launcher_round.png
-        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-mdpi/ic_launcher_round.png
-        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-xhdpi/ic_launcher_round.png
-        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-xxhdpi/ic_launcher_round.png
-        cp ./icons/icon-192x192.png android/app/src/main/res/mipmap-xxxhdpi/ic_launcher_round.png
-        echo "✅ Иконки скопированы!"
       
     - name: Setup Java
       uses: actions/setup-java@v4
