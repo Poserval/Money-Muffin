@@ -1,16 +1,8 @@
 {
   "appId": "com.moneymuffin.app",
-  "appName": "Money Muffin",
-  "webDir": ".",
+  "appName": "Money Muffin", 
+  "webDir": "capacitor-web",
   "server": {
-    "androidScheme": "https",
-    "hostname": "localhost"
-  },
-  "plugins": {
-    "SplashScreen": {
-      "launchShowDuration": 2000,
-      "launchAutoHide": true,
-      "backgroundColor": "#ffffff"
-    }
+    "androidScheme": "https"
   }
 }
