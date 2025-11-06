@@ -1,13 +1,11 @@
 {
-  "name": "money-muffin", 
+  "name": "money-muffin",
   "version": "1.0.0",
   "description": "Приложение для управления финансами",
   "type": "module",
   "scripts": {
-    "build": "vite build",
-    "dev": "vite",
-    "preview": "vite preview",
-    "cap:android": "capacitor add android && capacitor sync android"
+    "build": "echo 'Building for Capacitor...' && mkdir -p dist && cp *.html dist/ && cp *.css dist/ && cp *.js dist/ && cp *.json dist/ && cp -r icons dist/",
+    "cap:android": "npx cap add android && npx cap sync android"
   },
   "dependencies": {
     "@capacitor/android": "^5.0.0",
@@ -15,8 +13,5 @@
     "@capacitor/cli": "^5.0.0",
     "@capacitor/app": "^5.0.0",
     "@capacitor/splash-screen": "^5.0.0"
-  },
-  "devDependencies": {
-    "vite": "^4.4.0"
   }
 }
