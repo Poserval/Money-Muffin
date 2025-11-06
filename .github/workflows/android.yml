@@ -34,7 +34,6 @@ jobs:
           echo "Заменяем: $file"
           cp ./icons/icon-192x192.png "$file" 2>/dev/null || true
         done
-        echo "✅ Все иконки заменены!"
       
     - name: Setup Java
       uses: actions/setup-java@v4
@@ -42,48 +41,21 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
         
-    - name: Create signing config
-      run: |
-        cd android
-        # Создаем ключ
-        keytool -genkey -v \
-          -keystore release.keystore \
-          -alias release \
-          -keyalg RSA \
-          -keysize 2048 \
-          -validity 10000 \
-          -storepass 123456 \
-          -keypass 123456 \
-          -dname "CN=Money Muffin, O=MoneyMuffin, C=RU"
-        
-        # Создаем signing config
-        cat > app/release-signing-config.gradle << 'EOF'
-        android {
-            signingConfigs {
-                release {
-                    storeFile file("release.keystore")
-                    storePassword "123456"
-                    keyAlias "release"
-                    keyPassword "123456"
-                }
-            }
-            buildTypes {
-                release {
-                    signingConfig signingConfigs.release
-                }
-            }
-        }
-        EOF
-      
-    - name: Build Release APK
+    - name: Build Debug APK (Signed)
       run: |
         cd android
         chmod +x gradlew
-        ./gradlew assembleRelease --no-daemon
+        ./gradlew assembleDebug --no-daemon
+      
+    - name: Find and Upload APK
+      run: |
+        echo "🔍 Ищем APK файлы..."
+        find android -name "*.apk" -type f
+        cp android/app/build/outputs/apk/debug/app-debug.apk ./money-muffin-signed.apk
       
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: money-muffin-release-apk
-        path: android/app/build/outputs/apk/release/app-release.apk
+        name: money-muffin-apk
+        path: money-muffin-signed.apk
         retention-days: 7
