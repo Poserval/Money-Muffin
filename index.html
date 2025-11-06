@@ -19,27 +19,40 @@
     <meta name="apple-mobile-web-app-title" content="Money Muffin">
 
     <!-- Icons -->
-    <link rel="apple-touch-icon" href="icons/icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="icons/icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="icons/icon-192x192.png">
-    <link rel="icon" type="image/png" href="icons/icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="icons/icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="icons/icon-512x512.png">
+    <link rel="apple-touch-icon" href="./icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="152x152" href="./icons/icon-152x152.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-192x192.png">
+    <link rel="icon" type="image/png" href="./icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192x192.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512x512.png">
 
     <!-- Windows Meta -->
     <meta name="msapplication-TileColor" content="#007AFF">
-    <meta name="msapplication-TileImage" content="icons/icon-144x144.png">
+    <meta name="msapplication-TileImage" content="./icons/icon-144x144.png">
 
     <!-- Manifest -->
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="./manifest.json">
     
     <!-- Preload critical CSS -->
-    <link rel="preload" href="style.css" as="style">
-    <link rel="stylesheet" href="style.css">
+    <link rel="preload" href="./style.css" as="style">
+    <link rel="stylesheet" href="./style.css">
+    
+    <!-- Capacitor Compatibility -->
+    <script>
+        // Проверка запуска в Capacitor
+        if (window.Capacitor) {
+            console.log('💰 Запущено в Capacitor - скрываем PWA функции');
+            // Флаг для скрипта
+            window.isCapacitor = true;
+        } else {
+            console.log('💰 Запущено в браузере - включаем PWA');
+            window.isCapacitor = false;
+        }
+    </script>
     
     <!-- Service Worker Registration -->
     <script>
-        if ('serviceWorker' in navigator) {
+        if ('serviceWorker' in navigator && !window.isCapacitor) {
             window.addEventListener('load', function() {
                 navigator.serviceWorker.register('./sw.js')
                     .then(function(registration) {
@@ -64,13 +77,13 @@
                     <div class="balance-label" id="balanceLabel">Общий баланс</div>
                     <div class="balance-right">
                         <div class="balance-amount-container">
-                            <div class="balance-amount" id="totalBalance" aria-live="polite" aria-atomic="true">1 025 240</div>
+                            <div class="balance-amount" id="totalBalance" aria-live="polite" aria-atomic="true">0</div>
                             <div class="currency-selector" id="currencySelector" role="button" aria-haspopup="true" aria-expanded="false" aria-label="Выбор валюты">
                                 <div class="selected-currency" id="selectedCurrency">₽</div>
                             </div>
                         </div>
                         <div class="balance-change-container">
-                            <div class="balance-change" id="balanceChange" aria-live="polite">-13 767 ₽</div>
+                            <div class="balance-change" id="balanceChange" aria-live="polite">0 ₽</div>
                             <button class="reset-change-btn" id="resetChangeBtn" aria-label="Сбросить изменение баланса" title="Сбросить изменение">↺</button>
                         </div>
                     </div>
@@ -102,6 +115,10 @@
 
                 <div class="wallets-container" id="walletsContainer" role="list" aria-label="Список кошельков">
                     <!-- Кошельки будут загружаться через JavaScript -->
+                    <div class="empty-state" id="emptyState">
+                        <p>💰 Кошельков пока нет</p>
+                        <p>Нажмите "+ Добавить" чтобы создать первый кошелек</p>
+                    </div>
                 </div>
             </section>
         </main>
@@ -227,7 +244,6 @@
                     <h4>📲 Быстрая установка по QR-коду</h4>
                     <p>Отсканируйте QR-код чтобы открыть приложение и установить его:</p>
                     <div class="qr-placeholder">
-                        <!-- Здесь можно добавить изображение QR-кода -->
                         <div style="text-align: center; padding: 20px; background: #f5f5f5; border-radius: 10px;">
                             <p>🔄 QR-код будет добавлен позже</p>
                             <p><small>Ссылка: <strong>https://poserval.github.io/money-muffin/</strong></small></p>
@@ -243,7 +259,7 @@
     </div>
 
     <!-- Preload JavaScript -->
-    <link rel="preload" href="script.js" as="script">
-    <script src="script.js" defer></script>
+    <link rel="preload" href="./script.js" as="script">
+    <script src="./script.js" defer></script>
 </body>
 </html>
