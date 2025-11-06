@@ -1,7 +1,10 @@
 {
   "appId": "com.moneymuffin.app",
-  "appName": "Money Muffin",
+  "appName": "Money Muffin", 
   "webDir": "capacitor-web",
+  "android": {
+    "icon": "./icons/icon-192x192.png"
+  },
   "server": {
     "androidScheme": "https"
   },
