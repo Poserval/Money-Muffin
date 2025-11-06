@@ -41,21 +41,25 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
         
-    - name: Build Debug APK (Signed)
+    - name: Prepare signing
+      run: |
+        echo "🔐 Подготавливаем подпись..."
+        # Декодируем ключ из base64
+        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/money-muffin.jks
+        
+    - name: Build Release APK
       run: |
         cd android
         chmod +x gradlew
-        ./gradlew assembleDebug --no-daemon
-      
-    - name: Find and Upload APK
-      run: |
-        echo "🔍 Ищем APK файлы..."
-        find android -name "*.apk" -type f
-        cp android/app/build/outputs/apk/debug/app-debug.apk ./money-muffin-signed.apk
+        ./gradlew assembleRelease \
+          -Pandroid.injected.signing.store.file=money-muffin.jks \
+          -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
+          -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
+          -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
       
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: money-muffin-apk
-        path: money-muffin-signed.apk
+        name: money-muffin-release-apk
+        path: android/app/build/outputs/apk/release/app-release.apk
         retention-days: 7
