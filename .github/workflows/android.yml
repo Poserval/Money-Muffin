@@ -34,6 +34,25 @@ jobs:
           echo "Заменяем: $file"
           cp ./icons/icon-192x192.png "$file" 2>/dev/null || true
         done
+        echo "✅ Все иконки заменены!"
+      
+    - name: Prepare signing
+      run: |
+        echo "🔐 Подготавливаем подпись..."
+        # Создаем временный ключ для подписи
+        keytool -genkeypair -v \
+          -keystore money-muffin.jks \
+          -alias money_muffin \
+          -keyalg RSA \
+          -keysize 2048 \
+          -validity 10000 \
+          -storepass "MySecurePass123!" \
+          -keypass "MySecurePass123!" \
+          -dname "CN=Money Muffin, O=MoneyMuffin, C=RU"
+        
+        # Копируем ключ в Android проект
+        cp money-muffin.jks android/app/
+        echo "✅ Ключ создан и скопирован!"
       
     - name: Setup Java
       uses: actions/setup-java@v4
@@ -41,21 +60,15 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
         
-    - name: Prepare signing
-      run: |
-        echo "🔐 Подготавливаем подпись..."
-        # Декодируем ключ из base64
-        echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/money-muffin.jks
-        
     - name: Build Release APK
       run: |
         cd android
         chmod +x gradlew
         ./gradlew assembleRelease \
           -Pandroid.injected.signing.store.file=money-muffin.jks \
-          -Pandroid.injected.signing.store.password=${{ secrets.KEYSTORE_PASSWORD }} \
-          -Pandroid.injected.signing.key.alias=${{ secrets.KEY_ALIAS }} \
-          -Pandroid.injected.signing.key.password=${{ secrets.KEY_PASSWORD }}
+          -Pandroid.injected.signing.store.password=MySecurePass123! \
+          -Pandroid.injected.signing.key.alias=money_muffin \
+          -Pandroid.injected.signing.key.password=MySecurePass123!
       
     - name: Upload APK
       uses: actions/upload-artifact@v4
