@@ -261,5 +261,42 @@
     <!-- Preload JavaScript -->
     <link rel="preload" href="./script.js" as="script">
     <script src="./script.js" defer></script>
+
+    <!-- СТРАНИЦА 5: УПРАЖНЕНИЯ - ТРИЦЕПС -->
+<div id="page-triceps" class="page" style="display: none;">
+    <div class="exercises-detail-container">
+        <div class="exercises-detail-header">
+            <button id="back-to-exercises-from-triceps" class="back-btn" title="Назад">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" fill="white"/>
+                </svg>
+            </button>
+            <h2>Трицепс</h2>
+            <div class="detail-actions">
+                <button id="add-triceps-exercise-btn" class="detail-action-btn" title="Добавить упражнение">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="white"/>
+                    </svg>
+                </button>
+                <button id="sort-triceps-btn" class="detail-action-btn" title="Сортировка">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z" fill="white"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+        
+        <div class="exercises-detail-content">
+            <div id="triceps-exercises-list" class="exercises-detail-list">
+                <!-- Список упражнений для трицепса будет здесь -->
+            </div>
+            <div id="empty-triceps" class="empty-exercises-detail">
+                <p>Нет упражнений для трицепса</p>
+                <p style="margin-top: 10px; color: #888;">Нажмите + чтобы добавить упражнение</p>
+            </div>
+        </div>
+    </div>
+</div>
+    
 </body>
 </html>
