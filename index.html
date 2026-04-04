@@ -2,301 +2,336 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Money Muffin - Учет финансов</title>
-    
-    <!-- PWA Meta Tags -->
-    <meta name="theme-color" content="#007AFF">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
+    <meta name="theme-color" content="#121212">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Money Muffin">
-    <meta name="description" content="Простое и удобное приложение для учета личных финансов">
-    <meta name="keywords" content="финансы, деньги, бюджет, кошельки, учет">
-
-    <!-- iOS Meta Tags -->
+    <title>Gym Training</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- ГЛАВНАЯ ИКОНКА ДЛЯ ANDROID (PWA) -->
+    <link rel="icon" href="assets/icon-desktop-192.png" type="image/png">
+    
+    <!-- Иконки для разных размеров -->
+    <link rel="icon" type="image/png" sizes="16x16" href="assets/icon-desktop-16.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="assets/icon-desktop-32.png">
+    <link rel="icon" type="image/png" sizes="48x48" href="assets/icon-desktop-48.png">
+    <link rel="icon" type="image/png" sizes="64x64" href="assets/icon-desktop-64.png">
+    <link rel="icon" type="image/png" sizes="72x72" href="assets/icon-desktop-72.png">
+    <link rel="icon" type="image/png" sizes="96x96" href="assets/icon-desktop-96.png">
+    <link rel="icon" type="image/png" sizes="128x128" href="assets/icon-desktop-128.png">
+    <link rel="icon" type="image/png" sizes="144x144" href="assets/icon-desktop-144.png">
+    <link rel="icon" type="image/png" sizes="152x152" href="assets/icon-desktop-152.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="assets/icon-desktop-192.png">
+    <link rel="icon" type="image/png" sizes="256x256" href="assets/icon-desktop-256.png">
+    <link rel="icon" type="image/png" sizes="384x384" href="assets/icon-desktop-384.png">
+    <link rel="icon" type="image/png" sizes="512x512" href="assets/icon-desktop-512.png">
+    
+    <!-- Apple Touch Icon для iOS -->
+    <link rel="apple-touch-icon" sizes="180x180" href="assets/icon-desktop-152.png">
+    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="Money Muffin">
-
-    <!-- Icons -->
-    <link rel="apple-touch-icon" href="./icons/icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="152x152" href="./icons/icon-152x152.png">
-    <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-192x192.png">
-    <link rel="icon" type="image/png" href="./icons/icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192x192.png">
-    <link rel="icon" type="image/png" sizes="512x512" href="./icons/icon-512x512.png">
-
-    <!-- Windows Meta -->
-    <meta name="msapplication-TileColor" content="#007AFF">
-    <meta name="msapplication-TileImage" content="./icons/icon-144x144.png">
-
-    <!-- Manifest -->
-    <link rel="manifest" href="./manifest.json">
-    
-    <!-- Preload critical CSS -->
-    <link rel="preload" href="./style.css" as="style">
-    <link rel="stylesheet" href="./style.css">
-    
-    <!-- Capacitor Compatibility -->
-    <script>
-        // Проверка запуска в Capacitor
-        if (window.Capacitor) {
-            console.log('💰 Запущено в Capacitor - скрываем PWA функции');
-            // Флаг для скрипта
-            window.isCapacitor = true;
-        } else {
-            console.log('💰 Запущено в браузере - включаем PWA');
-            window.isCapacitor = false;
-        }
-    </script>
-    
-    <!-- Service Worker Registration -->
-    <script>
-        if ('serviceWorker' in navigator && !window.isCapacitor) {
-            window.addEventListener('load', function() {
-                navigator.serviceWorker.register('./sw.js')
-                    .then(function(registration) {
-                        console.log('💰 Service Worker зарегистрирован:', registration);
-                    })
-                    .catch(function(error) {
-                        console.log('💰 Ошибка регистрации Service Worker:', error);
-                    });
-            });
-        }
-    </script>
+    <meta name="apple-mobile-web-app-title" content="Gym Training">
 </head>
 <body>
-    <div class="container" role="application" aria-label="Приложение для учета финансов Money Muffin">
-        <header class="header" role="banner">
-            <div class="app-header">
-                <h1 class="app-title">Money Muffin</h1>
-            </div>
-            
-            <section class="total-balance-section" aria-labelledby="totalBalance">
-                <div class="total-balance">
-                    <div class="balance-label" id="balanceLabel">Общий баланс</div>
-                    <div class="balance-right">
-                        <div class="balance-amount-container">
-                            <div class="balance-amount" id="totalBalance" aria-live="polite" aria-atomic="true">0</div>
-                            <div class="currency-selector" id="currencySelector" role="button" aria-haspopup="true" aria-expanded="false" aria-label="Выбор валюты">
-                                <div class="selected-currency" id="selectedCurrency">₽</div>
-                            </div>
-                        </div>
-                        <div class="balance-change-container">
-                            <div class="balance-change" id="balanceChange" aria-live="polite">0 ₽</div>
-                            <button class="reset-change-btn" id="resetChangeBtn" aria-label="Сбросить изменение баланса" title="Сбросить изменение">↺</button>
-                        </div>
-                    </div>
-                </div>
-            </section>
-        </header>
-
-        <main class="main" role="main">
-            <section class="wallets-section" aria-labelledby="walletsHeading">
-                <header class="section-header">
-                    <h2 id="walletsHeading">Мои кошельки</h2>
-                    <button class="add-btn" id="addWalletBtn" aria-label="Добавить новый кошелек">+ Добавить</button>
-                </header>
-
-                <div class="sort-options" role="toolbar" aria-label="Опции сортировки и управления">
-                    <div class="sort-left">
-                        <span class="sort-label">Сортировать:</span>
-                        <div class="sort-buttons" role="group" aria-label="Типы сортировки">
-                            <button class="sort-btn" data-sort="name" aria-pressed="false">Имя</button>
-                            <button class="sort-btn active" data-sort="amount" aria-pressed="true">Сумма ▼</button>
-                        </div>
-                    </div>
-                    <div class="sort-actions" role="group" aria-label="Действия с приложением">
-                        <button class="action-btn" id="shareBtn" aria-label="Поделиться приложением" title="Поделиться приложением">📤</button>
-                        <button class="action-btn" id="installBtn" aria-label="Установить приложение" title="Установить приложение">📱</button>
-                        <button class="action-btn danger" id="clearAllBtn" aria-label="Удалить все данные" title="Удалить все данные">📛</button>
-                    </div>
-                </div>
-
-                <div class="wallets-container" id="walletsContainer" role="list" aria-label="Список кошельков">
-                    <!-- Кошельки будут загружаться через JavaScript -->
-                    <div class="empty-state" id="emptyState">
-                        <p>💰 Кошельков пока нет</p>
-                        <p>Нажмите "+ Добавить" чтобы создать первый кошелек</p>
-                    </div>
-                </div>
-            </section>
-        </main>
+    <!-- ЭКРАН ЗАСТАВКИ -->
+    <div id="splash-screen">
+        <img id="splash-image" src="assets/icon-main.png" alt="Gym Training">
     </div>
 
-    <!-- Модальное окно для добавления кошелька -->
-    <div class="modal" id="addWalletModal" role="dialog" aria-labelledby="addWalletTitle" aria-hidden="true">
-        <div class="modal-content">
-            <header class="modal-header">
-                <h3 id="addWalletTitle">Добавить кошелек</h3>
-            </header>
-            <div class="modal-body">
-                <form id="walletForm" aria-labelledby="addWalletTitle">
-                    <div class="form-group">
-                        <label for="walletName">Название:</label>
-                        <input type="text" id="walletName" required aria-required="true" autocomplete="off">
-                    </div>
-                    <div class="form-group">
-                        <label for="walletAmount">Сумма:</label>
-                        <input type="number" id="walletAmount" step="any" placeholder="Введите сумму" required aria-required="true" inputmode="decimal">
-                    </div>
-                    <div class="form-group">
-                        <label for="walletCurrency">Валюта:</label>
-                        <select id="walletCurrency" required aria-required="true">
-                            <option value="RUB">Рубль (₽)</option>
-                            <option value="USD">Доллар ($)</option>
-                            <option value="EUR">Евро (€)</option>
-                            <option value="CNY">Юань (¥)</option>
-                            <option value="JPY">Йена (¥)</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="walletType">Тип:</label>
-                        <select id="walletType" required aria-required="true">
-                            <option value="deposit">Вклад</option>
-                            <option value="credit">Кредитная карта</option>
-                            <option value="cash">Наличные</option>
-                            <option value="account">Счет</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label id="colorLabel">Цвет кошелька:</label>
-                        <div class="color-options" id="colorOptions" role="radiogroup" aria-labelledby="colorLabel">
-                            <!-- Цвета будут добавлены через JavaScript -->
-                        </div>
-                    </div>
-                    <div class="form-actions">
-                        <button type="button" class="cancel-btn" id="cancelBtn">Отмена</button>
-                        <button type="submit" class="save-btn">Сохранить</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-
-    <!-- Модальное окно подтверждения удаления -->
-    <div class="modal" id="confirmModal" role="alertdialog" aria-labelledby="confirmTitle" aria-describedby="confirmDescription" aria-hidden="true">
-        <div class="modal-content">
-            <header class="modal-header">
-                <h3 id="confirmTitle">⚠️ Внимание!</h3>
-            </header>
-            <div class="modal-body">
-                <p id="confirmDescription">Вы уверены, что хотите удалить ВСЕ данные?</p>
-                <p class="warning-text" aria-live="assertive">Это действие удалит все кошельки и историю изменений. Восстановление будет невозможно!</p>
-                <div class="form-actions">
-                    <button type="button" class="cancel-btn" id="confirmCancelBtn" autofocus>Отмена</button>
-                    <button type="button" class="save-btn danger" id="confirmDeleteBtn">Удалить всё</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Модальное окно инструкции по установке -->
-    <div class="modal" id="installHelpModal" role="dialog" aria-labelledby="installHelpTitle" aria-hidden="true">
-        <div class="modal-content">
-            <header class="modal-header">
-                <h3 id="installHelpTitle">📱 Установить приложение</h3>
-            </header>
-            <div class="modal-body">
-                <div class="install-options">
-                    <!-- Android -->
-                    <div class="install-option">
-                        <h4>🤖 Для Android</h4>
-                        <p><strong>Способ 1 (APK):</strong></p>
-                        <ol>
-                            <li>Скачайте файл MoneyMuffin.apk</li>
-                            <li>Разрешите установку из неизвестных источников</li>
-                            <li>Запустите файл и установите приложение</li>
-                        </ol>
-                        <p><strong>Способ 2 (PWA):</strong></p>
-                        <ol>
-                            <li>В Chrome нажмите "⋮" (меню)</li>
-                            <li>Выберите "Добавить на главный экран"</li>
-                            <li>Подтвердите установку</li>
-                        </ol>
-                    </div>
-
-                    <!-- iOS -->
-                    <div class="install-option">
-                        <h4>🍎 Для iPhone</h4>
-                        <ol>
-                            <li>Откройте приложение в Safari</li>
-                            <li>Нажмите кнопку "Поделиться" 📤</li>
-                            <li>Выберите "На экран «Домой»"</li>
-                            <li>Нажмите "Добавить" в правом верхнем углу</li>
-                        </ol>
-                        <p class="note">Приложение установится на главный экран и будет работать как обычное приложение!</p>
-                    </div>
-
-                    <!-- Компьютеры -->
-                    <div class="install-option">
-                        <h4>💻 Для компьютеров</h4>
-                        <p><strong>Chrome/Edge:</strong></p>
-                        <ol>
-                            <li>Нажмите на значок "Установить" в адресной строке</li>
-                            <li>Подтвердите установку</li>
-                        </ol>
-                        <p class="note">Приложение появится в меню "Пуск" и будет работать в отдельном окне</p>
-                    </div>
-                </div>
-                
-                <div class="qr-section">
-                    <h4>📲 Быстрая установка по QR-коду</h4>
-                    <p>Отсканируйте QR-код чтобы открыть приложение и установить его:</p>
-                    <div class="qr-placeholder">
-                        <div style="text-align: center; padding: 20px; background: #f5f5f5; border-radius: 10px;">
-                            <p>🔄 QR-код будет добавлен позже</p>
-                            <p><small>Ссылка: <strong>https://poserval.github.io/money-muffin/</strong></small></p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="form-actions">
-                    <button type="button" class="cancel-btn" id="installHelpCloseBtn">Закрыть</button>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Preload JavaScript -->
-    <link rel="preload" href="./script.js" as="script">
-    <script src="./script.js" defer></script>
-
-    <!-- СТРАНИЦА 5: УПРАЖНЕНИЯ - ТРИЦЕПС -->
-<div id="page-triceps" class="page" style="display: none;">
-    <div class="exercises-detail-container">
-        <div class="exercises-detail-header">
-            <button id="back-to-exercises-from-triceps" class="back-btn" title="Назад">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" fill="white"/>
-                </svg>
-            </button>
-            <h2>Трицепс</h2>
-            <div class="detail-actions">
-                <button id="add-triceps-exercise-btn" class="detail-action-btn" title="Добавить упражнение">
+    <!-- СТРАНИЦА 1: КАЛЕНДАРЬ -->
+    <div id="page-calendar" class="page" style="display: none;">
+        <div class="calendar-wrapper">
+            <div class="calendar-header">
+                <h2 id="current-month">Апрель 2026</h2>
+                <button id="reset-calendar-btn" class="reset-calendar-btn" title="Вернуться к текущему месяцу">
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 4V2L8 6L12 10V8C15.31 8 18 10.69 18 14C18 15.01 17.75 15.97 17.3 16.8L18.76 18.26C19.54 17.03 20 15.57 20 14C20 9.58 16.42 6 12 6V4Z" fill="white"/>
+                        <path d="M12 18V20L16 16L12 12V14C8.69 14 6 11.31 6 8C6 6.99 6.25 6.03 6.7 5.2L5.24 3.74C4.46 4.97 4 6.43 4 8C4 12.42 7.58 16 12 16V18Z" fill="white"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="calendar-window" id="calendar-window">
+                <div class="calendar-scroll-container" id="calendar-scroll">
+                    <div class="calendar-months" id="calendar-months">
+                        <!-- Месяцы будут добавлены через JavaScript -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- СТРАНИЦА 2: СПИСОК ТРЕНИРОВОК -->
+    <div id="page-workout" class="page" style="display: none;">
+        <div class="workout-container">
+            <div class="workout-header">
+                <button id="back-to-calendar-btn" class="back-btn" title="Назад">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" fill="white"/>
+                    </svg>
+                </button>
+                <h2 id="workout-title">Создай тренировку</h2>
+                <button id="add-workout-btn" class="add-workout-btn" title="Добавить тренировку">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="white"/>
                     </svg>
                 </button>
-                <button id="sort-triceps-btn" class="detail-action-btn" title="Сортировка">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z" fill="white"/>
-                    </svg>
-                </button>
             </div>
-        </div>
-        
-        <div class="exercises-detail-content">
-            <div id="triceps-exercises-list" class="exercises-detail-list">
-                <!-- Список упражнений для трицепса будет здесь -->
-            </div>
-            <div id="empty-triceps" class="empty-exercises-detail">
-                <p>Нет упражнений для трицепса</p>
-                <p style="margin-top: 10px; color: #888;">Нажмите + чтобы добавить упражнение</p>
+            <div class="workout-content">
+                <div id="workouts-list" class="workouts-list">
+                    <!-- Список тренировок будет здесь -->
+                </div>
+                <div id="empty-workouts" class="workout-placeholder">
+                    <p>Нет созданных тренировок</p>
+                    <p style="margin-top: 20px; color: #888;">Нажмите + чтобы создать тренировку</p>
+                </div>
             </div>
         </div>
     </div>
-</div>
-    
+
+    <!-- СТРАНИЦА 3: ДЕТАЛИ ТРЕНИРОВКИ -->
+    <div id="page-workout-detail" class="page" style="display: none;">
+        <div class="detail-container">
+            <div class="detail-header">
+                <button id="back-to-workout-list-btn" class="back-btn" title="Назад">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" fill="white"/>
+                    </svg>
+                </button>
+                <div class="detail-header-info">
+                    <span class="detail-day-badge" id="detail-day-badge">Пн</span>
+                    <h2 id="detail-workout-name">Спина</h2>
+                </div>
+                <div style="width: 40px;"></div>
+            </div>
+            <div class="detail-content">
+                <button id="add-exercise-btn" class="add-exercise-btn">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="#ff9800"/>
+                    </svg>
+                    <span>Выбери упражнение</span>
+                </button>
+                <div id="exercises-list" class="exercises-list">
+                    <!-- Список упражнений будет здесь -->
+                </div>
+                <div id="empty-exercises" class="empty-exercises">
+                    <p>Нет добавленных упражнений</p>
+                    <p style="margin-top: 10px; color: #888;">Нажмите "Выбери упражнение" чтобы добавить</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- СТРАНИЦА 4: УПРАЖНЕНИЯ -->
+    <div id="page-exercises" class="page" style="display: none;">
+        <div class="exercises-container">
+            <div class="exercises-header">
+                <button id="back-to-main-from-exercises" class="back-btn" title="Назад">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" fill="white"/>
+                    </svg>
+                </button>
+                <h2>Упражнения</h2>
+                <div style="width: 40px;"></div>
+            </div>
+            
+            <div class="exercises-content">
+                <div class="exercises-grid">
+                    <!-- Первый ряд -->
+                    <div class="exercise-category" data-category="triceps">
+                        <div class="category-icon">
+                            <img src="assets/icon-exercises-triceps.png" alt="Трицепс">
+                        </div>
+                        <span class="category-name">Трицепс</span>
+                    </div>
+                    <div class="exercise-category" data-category="chest">
+                        <div class="category-icon">
+                            <img src="assets/icon-exercises-chest.png" alt="Грудные">
+                        </div>
+                        <span class="category-name">Грудные</span>
+                    </div>
+                    <div class="exercise-category" data-category="shoulder">
+                        <div class="category-icon">
+                            <img src="assets/icon-exercises-shoulder.png" alt="Плечи">
+                        </div>
+                        <span class="category-name">Плечи</span>
+                    </div>
+                </div>
+                <div class="exercises-grid">
+                    <!-- Второй ряд -->
+                    <div class="exercise-category" data-category="biceps">
+                        <div class="category-icon">
+                            <img src="assets/icon-exercises-biceps.png" alt="Бицепс">
+                        </div>
+                        <span class="category-name">Бицепс</span>
+                    </div>
+                    <div class="exercise-category" data-category="abs">
+                        <div class="category-icon">
+                            <img src="assets/icon-exercises-abs.png" alt="Пресс">
+                        </div>
+                        <span class="category-name">Пресс</span>
+                    </div>
+                    <div class="exercise-category" data-category="back">
+                        <div class="category-icon">
+                            <img src="assets/icon-exercises-back.png" alt="Спина">
+                        </div>
+                        <span class="category-name">Спина</span>
+                    </div>
+                </div>
+                <div class="exercises-grid">
+                    <!-- Третий ряд -->
+                    <div class="exercise-category" data-category="forearms">
+                        <div class="category-icon">
+                            <img src="assets/icon-exercises-forearms.png" alt="Предплечье">
+                        </div>
+                        <span class="category-name">Предплечье</span>
+                    </div>
+                    <div class="exercise-category" data-category="upperlegs">
+                        <div class="category-icon">
+                            <img src="assets/icon-exercises-upperlegs.png" alt="Ноги (верх)">
+                        </div>
+                        <span class="category-name">Ноги (верх)</span>
+                    </div>
+                    <div class="exercise-category" data-category="glutes">
+                        <div class="category-icon">
+                            <img src="assets/icon-exercises-glutes.png" alt="Ягодицы">
+                        </div>
+                        <span class="category-name">Ягодицы</span>
+                    </div>
+                </div>
+                <div class="exercises-grid">
+                    <!-- Четвертый ряд -->
+                    <div class="exercise-category" data-category="cardio">
+                        <div class="category-icon">
+                            <img src="assets/icon-exercises-cardio.png" alt="Кардио">
+                        </div>
+                        <span class="category-name">Кардио</span>
+                    </div>
+                    <div class="exercise-category" data-category="lowerlegs">
+                        <div class="category-icon">
+                            <img src="assets/icon-exercises-lowerlegs.png" alt="Ноги (низ)">
+                        </div>
+                        <span class="category-name">Ноги (низ)</span>
+                    </div>
+                    <div class="exercise-category" data-category="all">
+                        <div class="category-icon">
+                            <img src="assets/icon-exercises-all.png" alt="Все">
+                        </div>
+                        <span class="category-name">Все</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- СТРАНИЦА 5: УПРАЖНЕНИЯ - ТРИЦЕПС -->
+    <div id="page-triceps" class="page" style="display: none;">
+        <div class="exercises-detail-container">
+            <div class="exercises-detail-header">
+                <button id="back-to-exercises-from-triceps" class="back-btn" title="Назад">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M20 11H7.83L13.42 5.41L12 4L4 12L12 20L13.41 18.59L7.83 13H20V11Z" fill="white"/>
+                    </svg>
+                </button>
+                <h2>Трицепс</h2>
+                <div class="detail-actions">
+                    <button id="add-triceps-exercise-btn" class="detail-action-btn" title="Добавить упражнение">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z" fill="white"/>
+                        </svg>
+                    </button>
+                    <button id="sort-triceps-btn" class="detail-action-btn" title="Сортировка">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 18h6v-2H3v2zM3 6v2h18V6H3zm0 7h12v-2H3v2z" fill="white"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            
+            <div class="exercises-detail-content">
+                <div id="triceps-exercises-list" class="exercises-detail-list">
+                    <!-- Список упражнений для трицепса будет здесь -->
+                </div>
+                <div id="empty-triceps" class="empty-exercises-detail">
+                    <p>Нет упражнений для трицепса</p>
+                    <p style="margin-top: 10px; color: #888;">Нажмите + чтобы добавить упражнение</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- МОДАЛЬНОЕ ОКНО -->
+    <div id="workout-modal" class="modal">
+        <div class="modal-content">
+            <h3 id="modal-title">Создать тренировку</h3>
+            <div class="modal-field">
+                <label>Имя тренировки</label>
+                <input type="text" id="workout-name" placeholder="Например: Руки и спина" maxlength="50">
+            </div>
+            <div class="modal-field">
+                <label>День тренировки</label>
+                <div class="day-selector">
+                    <select id="workout-day">
+                        <option value="any">Любой день</option>
+                        <option value="monday">Понедельник</option>
+                        <option value="tuesday">Вторник</option>
+                        <option value="wednesday">Среда</option>
+                        <option value="thursday">Четверг</option>
+                        <option value="friday">Пятница</option>
+                        <option value="saturday">Суббота</option>
+                        <option value="sunday">Воскресенье</option>
+                    </select>
+                </div>
+                <p class="hint">Выберите "Любой день", если тренировка не привязана к конкретному дню</p>
+            </div>
+            <div class="modal-buttons">
+                <button id="cancel-workout-btn" class="modal-cancel-btn">Отмена</button>
+                <button id="confirm-workout-btn" class="modal-confirm-btn">Принять</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- МЕНЮ ДЛЯ КАРТОЧКИ -->
+    <div id="workout-menu" class="workout-menu">
+        <div class="workout-menu-content">
+            <button id="menu-edit" class="menu-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zM20.71 7.04c.39-.39.39-1.02 0-1.41l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="white"/>
+                </svg>
+                <span>Изменить</span>
+            </button>
+            <button id="menu-copy" class="menu-item">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="white"/>
+                </svg>
+                <span>Копия</span>
+            </button>
+            <button id="menu-delete" class="menu-item menu-delete">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" fill="white"/>
+                </svg>
+                <span>Удалить</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- НИЖНЯЯ ПАНЕЛЬ -->
+    <div class="bottom-nav">
+        <button class="nav-btn" id="nav-training" data-page="workout">
+            <img src="assets/icon-training-button.png" alt="Тренировка" class="nav-icon">
+            <span class="nav-label">Тренировка</span>
+        </button>
+        <button class="nav-btn" id="nav-exercises" data-page="exercises">
+            <img src="assets/icon-exercises-button.png" alt="Упражнения" class="nav-icon">
+            <span class="nav-label">Упражнения</span>
+        </button>
+        <button class="nav-btn" id="nav-progress" data-page="progress">
+            <img src="assets/icon-progress-button.png" alt="Прогресс" class="nav-icon">
+            <span class="nav-label">Прогресс</span>
+        </button>
+    </div>
+
+    <script src="script.js"></script>
 </body>
 </html>
