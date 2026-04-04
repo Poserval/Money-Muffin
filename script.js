@@ -1,1229 +1,866 @@
-// Данные приложения
-let wallets = [];
-let currentSort = 'amount';
-let sortDirection = 'desc';
-let selectedCurrency = 'RUB';
-let isDragging = false;
-let draggedWalletId = null;
+// ==================== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ====================
+let currentYear = 2026;
+let currentMonthIndex = 3;
+let monthsData = [];
+let isFirstLoad = true;
+let splashTimeout = null;
+let isAppLoaded = false;
+let selectedDate = null;
+let currentPage = 'calendar';
+let workouts = [];
+let editingWorkoutIndex = null;
+let dragStartIndex = null;
+let currentWorkoutIndex = null;
 
-// Константы
-const ANIMATION_DURATION = 150;
-const TOUCH_DELAY = 200;
-const TOUCH_THRESHOLD = 10;
-
-// Символы валют
-const currencySymbols = {
-    'RUB': '₽',
-    'USD': '$',
-    'EUR': '€',
-    'CNY': '¥',
-    'JPY': '¥'
-};
-
-// Названия валют
-const currencyNames = {
-    'RUB': 'Рубль',
-    'USD': 'Доллар', 
-    'EUR': 'Евро',
-    'CNY': 'Юань',
-    'JPY': 'Йена'
-};
-
-// Цвета кошельков
-const walletColors = [
-    '#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF', '#5856D6',
-    '#FF2D55', '#AF52DE', '#1D1D1F', '#8E8E93'
-];
-
-// DOM элементы
-let walletsContainer, addWalletBtn, addWalletModal, cancelBtn, walletForm;
-let sortButtons, totalBalanceElement, balanceChangeElement, colorOptions;
-let resetChangeBtn, shareBtn, installBtn, clearAllBtn, confirmModal;
-let confirmCancelBtn, confirmDeleteBtn, selectedCurrencyElement;
-
-// Начальные данные
-const initialWallets = [
-    {
-        id: 1,
-        name: "ДомРФ (вклад)",
-        amount: 1000000,
-        currency: "RUB",
-        type: "deposit",
-        lastUpdate: "2025-10-25",
-        color: '#007AFF',
-        pinned: false,
-        order: 1
-    },
-    {
-        id: 2, 
-        name: "Сбер (Вклад)",
-        amount: 100000.25,
-        currency: "RUB",
-        type: "deposit",
-        lastUpdate: "2025-10-25",
-        color: '#4CD964',
-        pinned: false,
-        order: 2
-    },
-    {
-        id: 3,
-        name: "Наличка",
-        amount: 240.75,
-        currency: "RUB", 
-        type: "cash",
-        lastUpdate: "2025-10-31",
-        color: '#FFCC00',
-        pinned: false,
-        order: 3
-    },
-    {
-        id: 4,
-        name: "ВТБ (кредитка)",
-        amount: -25000,
-        currency: "RUB",
-        type: "credit",
-        lastUpdate: "2025-10-25",
-        color: '#FF3B30',
-        pinned: false,
-        order: 4
-    },
-    {
-        id: 5,
-        name: "Альфа банк (кредитка)",
-        amount: -50000.15,
-        currency: "RUB",
-        type: "credit", 
-        lastUpdate: "2025-10-25",
-        color: '#FF9500',
-        pinned: false,
-        order: 5
-    },
-    {
-        id: 6,
-        name: "Долларовый счет",
-        amount: 1500.99,
-        currency: "USD",
-        type: "account",
-        lastUpdate: "2025-10-25",
-        color: '#5AC8FA',
-        pinned: false,
-        order: 6
-    }
-];
-
-// Балансы
-let previousBalances = {
-    'RUB': 1025240.85,
-    'USD': 0,
-    'EUR': 0,
-    'CNY': 0,
-    'JPY': 0
-};
-
-let balanceChanges = {
-    'RUB': -13767.45,
-    'USD': 0,
-    'EUR': 0,
-    'CNY': 0,
-    'JPY': 0
-};
-
-let showBalanceChanges = {
-    'RUB': true,
-    'USD': false,
-    'EUR': false,
-    'CNY': false,
-    'JPY': false
-};
-
-// Инициализация приложения
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded - initializing app');
-    try {
-        initDOMElements();
-        initColorOptions();
-        loadWallets();
-        setupEventListeners();
-        
-        // В Capacitor отключаем PWA функции
-        if (window.isCapacitor) {
-            console.log('Capacitor detected - disabling PWA features');
-            if (installBtn) installBtn.style.display = 'none';
-        } else {
-            initPWA();
-        }
-        
-        console.log('App initialized successfully');
-    } catch (error) {
-        console.error('Error during app initialization:', error);
-        // Fallback на начальные данные
-        wallets = [...initialWallets];
-        renderWallets();
-        updateTotalBalance();
-    }
+// ==================== ИНИЦИАЛИЗАЦИЯ ====================
+document.addEventListener("DOMContentLoaded", () => {
+    loadWorkouts();
+    initCalendar();
+    setupSplashScreen();
+    setupNavigation();
+    setupBottomNav();
+    setupModal();
+    setupWorkoutMenu();
 });
 
-// Инициализация DOM элементов
-function initDOMElements() {
-    console.log('Initializing DOM elements');
-    
-    const elements = {
-        walletsContainer: 'walletsContainer',
-        addWalletBtn: 'addWalletBtn',
-        addWalletModal: 'addWalletModal',
-        cancelBtn: 'cancelBtn',
-        walletForm: 'walletForm',
-        totalBalance: 'totalBalance',
-        balanceChange: 'balanceChange',
-        colorOptions: 'colorOptions',
-        resetChangeBtn: 'resetChangeBtn',
-        shareBtn: 'shareBtn',
-        installBtn: 'installBtn',
-        clearAllBtn: 'clearAllBtn',
-        confirmModal: 'confirmModal',
-        confirmCancelBtn: 'confirmCancelBtn',
-        confirmDeleteBtn: 'confirmDeleteBtn',
-        selectedCurrency: 'selectedCurrency'
-    };
+// ==================== РАБОТА С ТРЕНИРОВКАМИ ====================
 
-    // Безопасное получение элементов
-    for (const [key, id] of Object.entries(elements)) {
-        const element = document.getElementById(id);
-        if (!element) {
-            console.warn(`Элемент с id "${id}" не найден`);
-            continue;
-        }
-        
-        switch(key) {
-            case 'walletsContainer': walletsContainer = element; break;
-            case 'addWalletBtn': addWalletBtn = element; break;
-            case 'addWalletModal': addWalletModal = element; break;
-            case 'cancelBtn': cancelBtn = element; break;
-            case 'walletForm': walletForm = element; break;
-            case 'totalBalance': totalBalanceElement = element; break;
-            case 'balanceChange': balanceChangeElement = element; break;
-            case 'colorOptions': colorOptions = element; break;
-            case 'resetChangeBtn': resetChangeBtn = element; break;
-            case 'shareBtn': shareBtn = element; break;
-            case 'installBtn': installBtn = element; break;
-            case 'clearAllBtn': clearAllBtn = element; break;
-            case 'confirmModal': confirmModal = element; break;
-            case 'confirmCancelBtn': confirmCancelBtn = element; break;
-            case 'confirmDeleteBtn': confirmDeleteBtn = element; break;
-            case 'selectedCurrency': selectedCurrencyElement = element; break;
-        }
-    }
-
-    sortButtons = document.querySelectorAll('.sort-btn');
-    console.log(`Found ${sortButtons.length} sort buttons`);
-}
-
-// PWA Functionality
-function initPWA() {
-    console.log('Initializing PWA functionality');
-    
-    let deferredPrompt;
-
-    window.addEventListener('beforeinstallprompt', (e) => {
-        console.log('Before install prompt fired');
-        e.preventDefault();
-        deferredPrompt = e;
-        
-        if (installBtn) {
-            installBtn.disabled = false;
-            installBtn.title = "Установить приложение";
-        }
-    });
-
-    if (installBtn) {
-        installBtn.addEventListener('click', async () => {
-            console.log('Install button clicked');
-            
-            if (deferredPrompt) {
-                try {
-                    deferredPrompt.prompt();
-                    const choiceResult = await deferredPrompt.userChoice;
-                    
-                    if (choiceResult.outcome === 'accepted') {
-                        console.log('User accepted the install');
-                        installBtn.style.display = 'none';
-                        showInstallSuccess();
-                    } else {
-                        showInstallInstructions();
-                    }
-                } catch (error) {
-                    console.log('Native prompt failed:', error);
-                    showInstallInstructions();
-                }
-                
-                deferredPrompt = null;
-            } else {
-                showInstallInstructions();
-            }
-        });
-    }
-
-    window.addEventListener('appinstalled', () => {
-        console.log('PWA was installed successfully');
-        if (installBtn) installBtn.style.display = 'none';
-    });
-}
-
-// Функция показа инструкции по установке
-function showInstallInstructions() {
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
-    const isAndroid = /Android/.test(navigator.userAgent);
-    
-    let instructions = '';
-    
-    if (isIOS) {
-        instructions = `📱 Установка на iPhone/iPad:
-
-1. Нажмите кнопку "Поделиться" ⎊ 
-2. Прокрутите вниз и выберите "На экран «Домой»"
-3. Нажмите "Добавить" в правом верхнем углу
-4. Готово! Приложение появится на рабочем столе`;
-    } else if (isAndroid) {
-        instructions = `📱 Установка на Android:
-
-Автоматическая установка не сработала 😔
-
-Сделайте вручную:
-1. Нажмите меню браузера (⋮ или ⋯)
-2. Выберите "Установить приложение" 
-3. Подтвердите установку
-4. Готово! Приложение появится в списке приложений`;
+function loadWorkouts() {
+    const savedWorkouts = localStorage.getItem('gym_workouts_list');
+    if (savedWorkouts) {
+        workouts = JSON.parse(savedWorkouts);
     } else {
-        instructions = `📱 Установка приложения:
-
-1. В меню браузера найдите "Установить приложение"
-2. Или используйте опцию "Добавить на рабочий стол"
-3. Подтвердите установку
-4. Готово! Приложение будет доступно оффлайн`;
+        workouts = [];
     }
+    renderWorkoutsList();
+}
+
+function saveWorkouts() {
+    localStorage.setItem('gym_workouts_list', JSON.stringify(workouts));
+    renderWorkoutsList();
+}
+
+function renderWorkoutsList() {
+    const workoutsList = document.getElementById('workouts-list');
+    const emptyPlaceholder = document.getElementById('empty-workouts');
     
-    alert(instructions);
-}
-
-// Функция показа успешной установки
-function showInstallSuccess() {
-    alert('🎉 Приложение успешно установлено!\n\nТеперь оно доступно на вашем рабочем столе и работает оффлайн.');
-}
-
-// Инициализация выбора цвета
-function initColorOptions() {
-    if (!colorOptions) return;
+    if (!workoutsList || !emptyPlaceholder) return;
     
-    colorOptions.innerHTML = '';
-    
-    walletColors.forEach((color, index) => {
-        const colorOption = document.createElement('div');
-        colorOption.className = 'color-option';
-        colorOption.style.backgroundColor = color;
-        colorOption.dataset.color = color;
-        
-        // Добавляем границу для светлых цветов
-        if (['#FFCC00', '#4CD964', '#5AC8FA'].includes(color)) {
-            colorOption.style.border = '1px solid #e5e5e7';
-        }
-        
-        if (index === 0) {
-            colorOption.classList.add('selected');
-        }
-        
-        colorOption.addEventListener('click', function() {
-            document.querySelectorAll('.color-option').forEach(opt => {
-                opt.classList.remove('selected');
-            });
-            this.classList.add('selected');
-        });
-        
-        colorOptions.appendChild(colorOption);
-    });
-}
-
-// Получение выбранного цвета
-function getSelectedColor() {
-    const selected = document.querySelector('.color-option.selected');
-    return selected ? selected.dataset.color : walletColors[0];
-}
-
-// Получение списка валют
-function getAvailableCurrencies() {
-    const currencies = new Set(wallets.map(wallet => wallet.currency));
-    return Array.from(currencies);
-}
-
-// Загрузка данных
-function loadWallets() {
-    try {
-        const savedWallets = localStorage.getItem('moneyMuffinWallets');
-        const savedPreviousBalances = localStorage.getItem('moneyMuffinPreviousBalances');
-        const savedBalanceChanges = localStorage.getItem('moneyMuffinBalanceChanges');
-        const savedShowChanges = localStorage.getItem('moneyMuffinShowChanges');
-        const savedSort = localStorage.getItem('moneyMuffinSort');
-        const savedSortDirection = localStorage.getItem('moneyMuffinSortDirection');
-        const savedCurrency = localStorage.getItem('moneyMuffinSelectedCurrency');
-        
-        if (savedPreviousBalances) previousBalances = JSON.parse(savedPreviousBalances);
-        if (savedBalanceChanges) balanceChanges = JSON.parse(savedBalanceChanges);
-        if (savedShowChanges) showBalanceChanges = JSON.parse(savedShowChanges);
-        if (savedSort) currentSort = savedSort;
-        if (savedSortDirection) sortDirection = savedSortDirection;
-        if (savedCurrency) selectedCurrency = savedCurrency;
-        
-        if (savedWallets) {
-            const parsedWallets = JSON.parse(savedWallets);
-            if (parsedWallets.length > 0) {
-                wallets = parsedWallets;
-            } else {
-                wallets = [...initialWallets];
-                initializePreviousBalances();
-            }
-        } else {
-            wallets = [...initialWallets];
-            initializePreviousBalances();
-        }
-        
-        const availableCurrencies = getAvailableCurrencies();
-        if (!availableCurrencies.includes(selectedCurrency)) {
-            selectedCurrency = availableCurrencies[0] || 'RUB';
-        }
-        
-        updateCurrencyDisplay();
-        updateSortButtons();
-        renderWallets();
-        updateTotalBalance();
-    } catch (error) {
-        console.error('Ошибка загрузки данных:', error);
-        wallets = [...initialWallets];
-        initializePreviousBalances();
-        updateCurrencyDisplay();
-        renderWallets();
-        updateTotalBalance();
-    }
-}
-
-// Инициализация предыдущих балансов
-function initializePreviousBalances() {
-    const availableCurrencies = getAvailableCurrencies();
-    availableCurrencies.forEach(currency => {
-        const currentBalance = getTotalBalanceInCurrency(currency);
-        previousBalances[currency] = currentBalance;
-        balanceChanges[currency] = 0;
-        showBalanceChanges[currency] = false;
-    });
-    balanceChanges['RUB'] = -13767.45;
-    showBalanceChanges['RUB'] = true;
-}
-
-// Сохранение данных
-function saveWallets() {
-    try {
-        localStorage.setItem('moneyMuffinWallets', JSON.stringify(wallets));
-        localStorage.setItem('moneyMuffinPreviousBalances', JSON.stringify(previousBalances));
-        localStorage.setItem('moneyMuffinBalanceChanges', JSON.stringify(balanceChanges));
-        localStorage.setItem('moneyMuffinShowChanges', JSON.stringify(showBalanceChanges));
-        localStorage.setItem('moneyMuffinSort', currentSort);
-        localStorage.setItem('moneyMuffinSortDirection', sortDirection);
-        localStorage.setItem('moneyMuffinSelectedCurrency', selectedCurrency);
-    } catch (error) {
-        console.error('Ошибка сохранения данных:', error);
-    }
-}
-
-// Настройка обработчиков событий
-function setupEventListeners() {
-    // Основные обработчики модальных окон
-    if (addWalletBtn && addWalletModal) {
-        addWalletBtn.addEventListener('click', () => {
-            addWalletModal.classList.add('active');
-            if (walletForm) {
-                walletForm.reset();
-                walletForm.onsubmit = handleAddWallet;
-            }
-        });
-    }
-
-    if (cancelBtn && addWalletModal) {
-        cancelBtn.addEventListener('click', () => {
-            addWalletModal.classList.remove('active');
-            if (walletForm) walletForm.reset();
-        });
-    }
-
-    // Обработчики сортировки
-    if (sortButtons) {
-        sortButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                const sortType = btn.dataset.sort;
-                if (sortType) handleSortClick(sortType);
-            });
-        });
-    }
-
-    // Обработчики модальных окон
-    if (addWalletModal) {
-        addWalletModal.addEventListener('click', (e) => {
-            if (e.target === addWalletModal) {
-                addWalletModal.classList.remove('active');
-                if (walletForm) walletForm.reset();
-            }
-        });
-    }
-
-    // Обработчики кнопок
-    if (resetChangeBtn) resetChangeBtn.addEventListener('click', resetBalanceChange);
-    if (shareBtn) shareBtn.addEventListener('click', shareApp);
-    if (clearAllBtn) clearAllBtn.addEventListener('click', showClearAllConfirmation);
-    if (confirmCancelBtn) confirmCancelBtn.addEventListener('click', hideClearAllConfirmation);
-    if (confirmDeleteBtn) confirmDeleteBtn.addEventListener('click', clearAllData);
-    if (selectedCurrencyElement) selectedCurrencyElement.addEventListener('click', toggleCurrency);
-
-    // Глобальные обработчики
-    document.addEventListener('click', (e) => {
-        if (addWalletModal && !addWalletModal.contains(e.target) && e.target !== addWalletBtn) {
-            addWalletModal.classList.remove('active');
-            if (walletForm) walletForm.reset();
-        }
-        if (confirmModal && !confirmModal.contains(e.target) && e.target !== clearAllBtn) {
-            confirmModal.classList.remove('active');
-        }
-    });
-
-    if (confirmModal) {
-        confirmModal.addEventListener('click', (e) => {
-            if (e.target === confirmModal) hideClearAllConfirmation();
-        });
-    }
-
-    // Обработчик ошибок
-    window.addEventListener('error', (e) => {
-        console.error('Global error:', e.error);
-    });
-}
-
-// Переключение валюты
-function toggleCurrency() {
-    const availableCurrencies = getAvailableCurrencies();
-    if (availableCurrencies.length <= 1) return;
-    
-    const currentIndex = availableCurrencies.indexOf(selectedCurrency);
-    const nextIndex = (currentIndex + 1) % availableCurrencies.length;
-    selectedCurrency = availableCurrencies[nextIndex];
-    
-    if (selectedCurrencyElement) {
-        selectedCurrencyElement.classList.add('changing');
-        setTimeout(() => {
-            updateCurrencyDisplay();
-            updateTotalBalance();
-            saveWallets();
-            selectedCurrencyElement.classList.remove('changing');
-        }, ANIMATION_DURATION);
-    } else {
-        updateCurrencyDisplay();
-        updateTotalBalance();
-        saveWallets();
-    }
-}
-
-function updateCurrencyDisplay() {
-    if (selectedCurrencyElement) {
-        selectedCurrencyElement.textContent = currencySymbols[selectedCurrency];
-        selectedCurrencyElement.title = currencyNames[selectedCurrency];
-    }
-}
-
-// Обработка сортировки
-function handleSortClick(sortType) {
-    if (currentSort === sortType) {
-        sortDirection = sortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-        currentSort = sortType;
-        sortDirection = sortType === 'name' ? 'asc' : 'desc';
-    }
-    
-    setSort(currentSort, sortDirection);
-}
-
-// Обновление кнопок сортировки
-function updateSortButtons() {
-    if (!sortButtons) return;
-    
-    sortButtons.forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.dataset.sort === currentSort) {
-            btn.classList.add('active');
-        }
-        
-        if (btn.dataset.sort === 'name') {
-            btn.textContent = currentSort === 'name' ? 
-                (sortDirection === 'asc' ? 'Имя ▲' : 'Имя ▼') : 'Имя';
-        } else if (btn.dataset.sort === 'amount') {
-            btn.textContent = currentSort === 'amount' ? 
-                (sortDirection === 'asc' ? 'Сумма ▲' : 'Сумма ▼') : 'Сумма';
-        }
-    });
-}
-
-// Сброс изменения баланса
-function resetBalanceChange() {
-    balanceChanges[selectedCurrency] = 0;
-    showBalanceChanges[selectedCurrency] = false;
-    updateTotalBalance();
-}
-
-// Добавление кошелька
-function handleAddWallet(e) {
-    e.preventDefault();
-    if (!walletForm) return false;
-    
-    const name = document.getElementById('walletName').value.trim();
-    const amountInput = document.getElementById('walletAmount').value.trim();
-    const currency = document.getElementById('walletCurrency').value;
-    const type = document.getElementById('walletType').value;
-    const color = getSelectedColor();
-
-    if (!name) {
-        alert('Пожалуйста, введите название кошелька');
-        return false;
-    }
-
-    if (!amountInput) {
-        alert('Пожалуйста, введите сумму');
-        return false;
-    }
-
-    const amount = parseFloat(amountInput);
-    if (isNaN(amount)) {
-        alert('Пожалуйста, введите корректную сумму');
-        return false;
-    }
-
-    const oldBalance = getTotalBalanceInCurrency(currency);
-    const maxOrder = wallets
-        .filter(w => w.currency === currency)
-        .reduce((max, w) => Math.max(max, w.order), 0);
-
-    const newWallet = {
-        id: Date.now(),
-        name: name,
-        amount: amount,
-        currency: currency,
-        type: type,
-        color: color,
-        lastUpdate: new Date().toISOString().split('T')[0],
-        pinned: false,
-        order: maxOrder + 1
-    };
-
-    wallets.push(newWallet);
-    
-    const newBalance = getTotalBalanceInCurrency(currency);
-    const change = newBalance - oldBalance;
-    
-    balanceChanges[currency] = change;
-    showBalanceChanges[currency] = change !== 0;
-    
-    saveWallets();
-    renderWallets();
-    updateTotalBalance();
-    
-    if (addWalletModal) addWalletModal.classList.remove('active');
-    if (walletForm) walletForm.reset();
-    
-    alert('Кошелек создан');
-    return false;
-}
-
-// Получение общего баланса в валюте
-function getTotalBalanceInCurrency(currency) {
-    return wallets
-        .filter(wallet => wallet.currency === currency)
-        .reduce((sum, wallet) => sum + wallet.amount, 0);
-}
-
-// Установка сортировки
-function setSort(sortType, direction) {
-    currentSort = sortType;
-    sortDirection = direction;
-    updateSortButtons();
-    renderWallets();
-}
-
-// Отображение кошельков
-function renderWallets() {
-    if (!walletsContainer) return;
-    
-    const sortedWallets = getSortedWallets();
-    const groupedWallets = groupWalletsByCurrency(sortedWallets);
-    
-    walletsContainer.innerHTML = '';
-
-    // Если нет кошельков - показываем пустое состояние
-    if (sortedWallets.length === 0) {
-        const emptyState = document.createElement('div');
-        emptyState.className = 'empty-state';
-        emptyState.innerHTML = `
-            <p>💰 Кошельков пока нет</p>
-            <p>Нажмите "+ Добавить" чтобы создать первый кошелек</p>
-        `;
-        walletsContainer.appendChild(emptyState);
+    if (workouts.length === 0) {
+        workoutsList.style.display = 'none';
+        emptyPlaceholder.style.display = 'block';
         return;
     }
-
-    const currencyOrder = ['RUB', 'USD', 'EUR', 'CNY', 'JPY'];
     
-    for (const currency of currencyOrder) {
-        const currencyWallets = groupedWallets[currency];
-        if (currencyWallets && currencyWallets.length > 0) {
-            const currencySection = createCurrencySection(currency, currencyWallets);
-            walletsContainer.appendChild(currencySection);
-        }
-    }
-}
-
-// Получение отсортированных кошельков
-function getSortedWallets() {
-    return [...wallets].sort((a, b) => {
-        if (a.pinned && !b.pinned) return -1;
-        if (!a.pinned && b.pinned) return 1;
-        
-        if (a.currency !== b.currency) {
-            return a.currency.localeCompare(b.currency);
-        }
-        
-        if (currentSort === 'custom') {
-            return a.order - b.order;
-        }
-        
-        let result = 0;
-        if (currentSort === 'name') {
-            result = a.name.localeCompare(b.name);
-        } else if (currentSort === 'amount') {
-            result = a.amount - b.amount;
-        }
-        
-        return sortDirection === 'asc' ? result : -result;
-    });
-}
-
-// Группировка кошельков по валюте
-function groupWalletsByCurrency(walletsArray) {
-    const grouped = {};
+    workoutsList.style.display = 'flex';
+    emptyPlaceholder.style.display = 'none';
     
-    walletsArray.forEach(wallet => {
-        if (!grouped[wallet.currency]) {
-            grouped[wallet.currency] = [];
-        }
-        grouped[wallet.currency].push(wallet);
-    });
+    const dayNames = {
+        'monday': 'Понедельник',
+        'tuesday': 'Вторник',
+        'wednesday': 'Среда',
+        'thursday': 'Четверг',
+        'friday': 'Пятница',
+        'saturday': 'Суббота',
+        'sunday': 'Воскресенье',
+        'any': 'Любой день'
+    };
     
-    return grouped;
-}
-
-// Создание секции валюты
-function createCurrencySection(currency, wallets) {
-    const section = document.createElement('div');
-    section.className = 'currency-section';
-
-    const title = document.createElement('h3');
-    title.className = 'currency-title';
-    title.textContent = currencyNames[currency] || currency;
-    
-    section.appendChild(title);
-
-    const walletsGrid = document.createElement('div');
-    walletsGrid.className = 'wallets-grid';
-    walletsGrid.dataset.currency = currency;
-    
-    wallets.forEach((wallet, index) => {
-        const walletElement = createWalletElement(wallet, index);
-        walletsGrid.appendChild(walletElement);
-    });
-
-    section.appendChild(walletsGrid);
-    return section;
-}
-
-// Создание элемента кошелька
-function createWalletElement(wallet, index) {
-    const walletDiv = document.createElement('div');
-    walletDiv.className = `wallet-item ${wallet.pinned ? 'pinned' : ''}`;
-    walletDiv.style.setProperty('--wallet-color', wallet.color);
-    walletDiv.dataset.walletId = wallet.id;
-    walletDiv.dataset.currency = wallet.currency;
-    walletDiv.dataset.index = index;
-    
-    if (!wallet.pinned) {
-        walletDiv.setAttribute('draggable', 'true');
-    }
-
-    const amountClass = wallet.amount >= 0 ? 'positive' : 'negative';
-    const amountFormatted = formatAmount(wallet.amount, wallet.currency);
-    const dateFormatted = formatDate(wallet.lastUpdate);
-
-    walletDiv.innerHTML = `
-        <div class="wallet-content">
-            <div class="wallet-name">${escapeHtml(wallet.name)} ${wallet.pinned ? '📌' : ''}</div>
-            <div class="wallet-amount ${amountClass}">${amountFormatted}</div>
-            <div class="wallet-date">Изм: ${dateFormatted}</div>
+    workoutsList.innerHTML = workouts.map((workout, index) => `
+        <div class="workout-card" data-index="${index}" draggable="true">
+            <div class="drag-handle">
+                <div class="drag-dots-row">
+                    <div class="drag-dot"></div>
+                    <div class="drag-dot"></div>
+                </div>
+                <div class="drag-dots-row">
+                    <div class="drag-dot"></div>
+                    <div class="drag-dot"></div>
+                </div>
+                <div class="drag-dots-row">
+                    <div class="drag-dot"></div>
+                    <div class="drag-dot"></div>
+                </div>
+            </div>
+            <div class="workout-card-content">
+                <div class="workout-day-badge ${workout.day === 'any' ? 'any-day' : ''}">
+                    ${dayNames[workout.day]}
+                </div>
+                <div class="workout-name">${escapeHtml(workout.name)}</div>
+            </div>
+            <button class="workout-menu-btn" data-index="${index}">
+                <div class="menu-dot"></div>
+                <div class="menu-dot"></div>
+                <div class="menu-dot"></div>
+            </button>
         </div>
-        <div class="wallet-actions">
-            <button class="wallet-action-btn" title="Редактировать">✏️</button>
-            <button class="wallet-action-btn" title="Копировать">📋</button>
-            <button class="wallet-action-btn" title="${wallet.pinned ? 'Открепить' : 'Закрепить'}">${wallet.pinned ? '📌' : '📍'}</button>
-            <button class="wallet-action-btn" title="Удалить">🗑️</button>
-        </div>
-    `;
-
-    // Обработчики действий
-    const deleteBtn = walletDiv.querySelector('.wallet-actions button:nth-child(4)');
-    deleteBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        deleteWallet(wallet.id);
-    });
-
-    const editBtn = walletDiv.querySelector('.wallet-actions button:nth-child(1)');
-    editBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        editWallet(wallet.id);
-    });
-
-    const copyBtn = walletDiv.querySelector('.wallet-actions button:nth-child(2)');
-    copyBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        copyWallet(wallet.id);
-    });
-
-    const pinBtn = walletDiv.querySelector('.wallet-actions button:nth-child(3)');
-    pinBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        togglePinWallet(wallet.id);
-    });
-
-    if (!wallet.pinned) {
-        setupDragAndDrop(walletDiv, wallet.id);
-    }
-
-    return walletDiv;
-}
-
-// Экранирование HTML
-function escapeHtml(text) {
-    const div = document.createElement('div');
-    div.textContent = text;
-    return div.innerHTML;
-}
-
-// Настройка перетаскивания
-function setupDragAndDrop(walletElement, walletId) {
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let isTouchDragging = false;
-    let touchTimeout = null;
-
-    walletElement.addEventListener('dragstart', (e) => {
-        if (e.target.closest('.wallet-actions')) {
-            e.preventDefault();
-            return;
-        }
-        
-        isDragging = true;
-        draggedWalletId = walletId;
-        walletElement.classList.add('dragging');
-        e.dataTransfer.effectAllowed = 'move';
-        e.dataTransfer.setData('text/plain', walletId);
-    });
-
-    walletElement.addEventListener('dragover', (e) => {
-        if (!isDragging || walletElement.dataset.walletId == draggedWalletId) return;
-        e.preventDefault();
-        walletElement.classList.add('drag-over');
-    });
-
-    walletElement.addEventListener('dragleave', () => {
-        walletElement.classList.remove('drag-over');
-    });
-
-    walletElement.addEventListener('drop', (e) => {
-        e.preventDefault();
-        walletElement.classList.remove('drag-over');
-        
-        if (!isDragging || !draggedWalletId) return;
-        
-        const targetWalletId = walletElement.dataset.walletId;
-        if (targetWalletId == draggedWalletId) return;
-        
-        moveWalletInArray(draggedWalletId, targetWalletId);
-    });
-
-    walletElement.addEventListener('dragend', () => {
-        isDragging = false;
-        draggedWalletId = null;
-        document.querySelectorAll('.wallet-item').forEach(item => {
-            item.classList.remove('dragging', 'drag-over');
+    `).join('');
+    
+    setupDragAndDrop();
+    setupWorkoutCardMenus();
+    
+    document.querySelectorAll('.workout-card').forEach(card => {
+        card.addEventListener('click', (e) => {
+            if (!e.target.closest('.workout-menu-btn') && !e.target.closest('.drag-handle')) {
+                const index = parseInt(card.dataset.index);
+                openWorkoutDetail(index);
+            }
         });
     });
+}
 
-    // Touch события
-    walletElement.addEventListener('touchstart', (e) => {
-        if (e.target.closest('.wallet-actions')) return;
-        
-        const touch = e.touches[0];
-        touchStartX = touch.clientX;
-        touchStartY = touch.clientY;
-        isTouchDragging = true;
-        
-        touchTimeout = setTimeout(() => {
-            if (isTouchDragging) {
-                walletElement.classList.add('dragging');
-                isDragging = true;
-                draggedWalletId = walletId;
-            }
-        }, TOUCH_DELAY);
-    });
-
-    walletElement.addEventListener('touchmove', (e) => {
-        if (!isTouchDragging || !isDragging) return;
-        e.preventDefault();
-        
-        const touch = e.touches[0];
-        const deltaX = touch.clientX - touchStartX;
-        const deltaY = touch.clientY - touchStartY;
-        
-        if (Math.abs(deltaX) > TOUCH_THRESHOLD || Math.abs(deltaY) > TOUCH_THRESHOLD) {
-            walletElement.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+function openWorkoutDetail(index) {
+    currentWorkoutIndex = index;
+    const workout = workouts[index];
+    if (!workout) return;
+    
+    const dayBadge = document.getElementById('detail-day-badge');
+    const workoutName = document.getElementById('detail-workout-name');
+    
+    const shortDayNames = {
+        'monday': 'Пн',
+        'tuesday': 'Вт',
+        'wednesday': 'Ср',
+        'thursday': 'Чт',
+        'friday': 'Пт',
+        'saturday': 'Сб',
+        'sunday': 'Вс',
+        'any': 'Любой'
+    };
+    
+    if (dayBadge) {
+        dayBadge.textContent = shortDayNames[workout.day] || 'Любой';
+        if (workout.day === 'any') {
+            dayBadge.classList.add('any-day');
+        } else {
+            dayBadge.classList.remove('any-day');
         }
-    });
-
-    walletElement.addEventListener('touchend', (e) => {
-        isTouchDragging = false;
-        clearTimeout(touchTimeout);
-        
-        if (isDragging) {
-            walletElement.style.transform = '';
-            walletElement.classList.remove('dragging');
-            
-            const touch = e.changedTouches[0];
-            const elements = document.elementsFromPoint(touch.clientX, touch.clientY);
-            const targetWallet = elements.find(el => el.classList.contains('wallet-item') && el.dataset.walletId != walletId);
-            
-            if (targetWallet) {
-                const targetWalletId = targetWallet.dataset.walletId;
-                moveWalletInArray(draggedWalletId, targetWalletId);
-            }
-            
-            isDragging = false;
-            draggedWalletId = null;
-            document.querySelectorAll('.wallet-item').forEach(item => {
-                item.classList.remove('drag-over');
-            });
-        }
-    });
-}
-
-// Перемещение кошелька
-function moveWalletInArray(draggedWalletId, targetWalletId) {
-    const draggedWallet = wallets.find(w => w.id == draggedWalletId);
-    const targetWallet = wallets.find(w => w.id == targetWalletId);
-    
-    if (!draggedWallet || !targetWallet || draggedWallet.currency !== targetWallet.currency) return;
-    
-    const sameCurrencyWallets = wallets.filter(w => w.currency === draggedWallet.currency && !w.pinned);
-    const targetIndex = sameCurrencyWallets.findIndex(w => w.id == targetWalletId);
-    const draggedIndex = sameCurrencyWallets.findIndex(w => w.id == draggedWalletId);
-    
-    if (targetIndex === -1 || draggedIndex === -1) return;
-    
-    sameCurrencyWallets.splice(draggedIndex, 1);
-    sameCurrencyWallets.splice(targetIndex, 0, draggedWallet);
-    
-    sameCurrencyWallets.forEach((wallet, index) => {
-        wallet.order = index + 1;
-    });
-    
-    currentSort = 'custom';
-    updateSortButtons();
-    saveWallets();
-    renderWallets();
-}
-
-// Удаление кошелька
-function deleteWallet(walletId) {
-    if (confirm('Удалить этот кошелек?')) {
-        const wallet = wallets.find(w => w.id === walletId);
-        if (!wallet) return;
-
-        const currency = wallet.currency;
-        const oldBalance = getTotalBalanceInCurrency(currency);
-
-        wallets = wallets.filter(w => w.id !== walletId);
-        
-        const newBalance = getTotalBalanceInCurrency(currency);
-        const change = newBalance - oldBalance;
-        
-        balanceChanges[currency] = change;
-        showBalanceChanges[currency] = change !== 0;
-        
-        saveWallets();
-        renderWallets();
-        updateTotalBalance();
-    }
-}
-
-// Редактирование кошелька
-function editWallet(walletId) {
-    const wallet = wallets.find(w => w.id === walletId);
-    if (!wallet) return;
-
-    document.getElementById('walletName').value = wallet.name;
-    document.getElementById('walletAmount').value = wallet.amount;
-    document.getElementById('walletCurrency').value = wallet.currency;
-    document.getElementById('walletType').value = wallet.type;
-
-    document.querySelectorAll('.color-option').forEach(opt => {
-        opt.classList.remove('selected');
-        if (opt.dataset.color === wallet.color) {
-            opt.classList.add('selected');
-        }
-    });
-
-    if (addWalletModal) addWalletModal.classList.add('active');
-
-    if (walletForm) {
-        walletForm.onsubmit = function(e) {
-            e.preventDefault();
-            
-            const name = document.getElementById('walletName').value.trim();
-            const amountInput = document.getElementById('walletAmount').value.trim();
-            const currency = document.getElementById('walletCurrency').value;
-            const type = document.getElementById('walletType').value;
-            const color = getSelectedColor();
-
-            if (!name) {
-                alert('Пожалуйста, введите название кошелька');
-                return false;
-            }
-
-            if (!amountInput) {
-                alert('Пожалуйста, введите сумму');
-                return false;
-            }
-
-            const amount = parseFloat(amountInput);
-            if (isNaN(amount)) {
-                alert('Пожалуйста, введите корректную сумму');
-                return false;
-            }
-
-            const oldBalance = getTotalBalanceInCurrency(currency);
-            
-            wallet.name = name;
-            wallet.amount = amount;
-            wallet.currency = currency;
-            wallet.type = type;
-            wallet.color = color;
-            wallet.lastUpdate = new Date().toISOString().split('T')[0];
-            
-            const newBalance = getTotalBalanceInCurrency(currency);
-            const change = newBalance - oldBalance;
-            
-            balanceChanges[currency] = change;
-            showBalanceChanges[currency] = change !== 0;
-            
-            saveWallets();
-            renderWallets();
-            updateTotalBalance();
-            
-            if (addWalletModal) addWalletModal.classList.remove('active');
-            if (walletForm) walletForm.reset();
-            
-            alert('Изменения внесены');
-            return false;
-        };
-    }
-}
-
-// Копирование кошелька
-function copyWallet(walletId) {
-    const wallet = wallets.find(w => w.id === walletId);
-    if (wallet) {
-        const currency = wallet.currency;
-        const oldBalance = getTotalBalanceInCurrency(currency);
-
-        const maxOrder = wallets
-            .filter(w => w.currency === currency)
-            .reduce((max, w) => Math.max(max, w.order), 0);
-
-        const copiedWallet = {
-            ...wallet,
-            id: Date.now(),
-            name: `${wallet.name} (копия)`,
-            pinned: false,
-            order: maxOrder + 1
-        };
-        wallets.push(copiedWallet);
-        
-        const newBalance = getTotalBalanceInCurrency(currency);
-        const change = newBalance - oldBalance;
-        
-        balanceChanges[currency] = change;
-        showBalanceChanges[currency] = change !== 0;
-        
-        saveWallets();
-        renderWallets();
-        updateTotalBalance();
-    }
-}
-
-// Закрепление кошелька
-function togglePinWallet(walletId) {
-    const walletIndex = wallets.findIndex(w => w.id === walletId);
-    if (walletIndex !== -1) {
-        wallets[walletIndex].pinned = !wallets[walletIndex].pinned;
-        saveWallets();
-        renderWallets();
-        updateTotalBalance();
-    }
-}
-
-// Обновление общего баланса
-function updateTotalBalance() {
-    if (!totalBalanceElement || !balanceChangeElement || !resetChangeBtn) return;
-    
-    const totalBalance = getTotalBalanceInCurrency(selectedCurrency);
-    const formattedBalance = formatTotalBalance(totalBalance);
-    
-    totalBalanceElement.textContent = formattedBalance;
-    
-    const showChange = showBalanceChanges[selectedCurrency];
-    const balanceChange = balanceChanges[selectedCurrency];
-    
-    if (showChange && balanceChange !== 0) {
-        let changeText = '';
-        if (balanceChange > 0) {
-            changeText = `+${formatAmount(balanceChange, selectedCurrency)}`;
-            balanceChangeElement.className = 'balance-change positive';
-        } else if (balanceChange < 0) {
-            changeText = `${formatAmount(balanceChange, selectedCurrency)}`;
-            balanceChangeElement.className = 'balance-change negative';
-        }
-        
-        balanceChangeElement.textContent = changeText;
-        balanceChangeElement.style.display = 'block';
-        resetChangeBtn.style.display = 'flex';
-    } else {
-        balanceChangeElement.style.display = 'none';
-        resetChangeBtn.style.display = 'none';
     }
     
-    saveWallets();
+    if (workoutName) {
+        workoutName.textContent = workout.name;
+    }
+    
+    showPage('workout-detail');
 }
 
-// Поделиться приложением
-function shareApp() {
-    if (navigator.share) {
-        navigator.share({
-            title: 'Money Muffin',
-            text: 'Учет финансов - просто и удобно!',
-            url: window.location.href
-        }).catch((error) => {
-            console.log('Ошибка шаринга:', error);
-            fallbackShare();
+function setupDragAndDrop() {
+    const cards = document.querySelectorAll('.workout-card');
+    let dragOverIndex = null;
+    
+    cards.forEach(card => {
+        card.setAttribute('draggable', 'true');
+        
+        card.addEventListener('dragstart', (e) => {
+            dragStartIndex = parseInt(card.dataset.index);
+            card.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
         });
-    } else {
-        fallbackShare();
+        
+        card.addEventListener('dragend', (e) => {
+            card.classList.remove('dragging');
+            if (dragOverIndex !== null && dragStartIndex !== null && dragStartIndex !== dragOverIndex) {
+                const [movedItem] = workouts.splice(dragStartIndex, 1);
+                workouts.splice(dragOverIndex, 0, movedItem);
+                saveWorkouts();
+            }
+            dragStartIndex = null;
+            dragOverIndex = null;
+        });
+        
+        card.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const targetIndex = parseInt(card.dataset.index);
+            if (targetIndex !== dragOverIndex) {
+                dragOverIndex = targetIndex;
+            }
+        });
+    });
+}
+
+function setupWorkoutCardMenus() {
+    const menuBtns = document.querySelectorAll('.workout-menu-btn');
+    menuBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const index = parseInt(btn.dataset.index);
+            showWorkoutMenu(btn, index);
+        });
+    });
+}
+
+function setupWorkoutMenu() {
+    const menu = document.getElementById('workout-menu');
+    const editBtn = document.getElementById('menu-edit');
+    const copyBtn = document.getElementById('menu-copy');
+    const deleteBtn = document.getElementById('menu-delete');
+    
+    if (editBtn) {
+        editBtn.addEventListener('click', () => {
+            if (editingWorkoutIndex !== null) {
+                closeWorkoutMenu();
+                openEditModal(editingWorkoutIndex);
+            }
+        });
     }
-}
-
-// Резервное копирование ссылки
-function fallbackShare() {
-    const url = window.location.href;
-    if (navigator.clipboard) {
-        navigator.clipboard.writeText(url)
-            .then(() => alert('Ссылка скопирована в буфер обмена!'))
-            .catch(() => prompt('Скопируйте ссылку вручную:', url));
-    } else {
-        prompt('Скопируйте ссылку вручную:', url);
+    
+    if (copyBtn) {
+        copyBtn.addEventListener('click', () => {
+            if (editingWorkoutIndex !== null) {
+                copyWorkout(editingWorkoutIndex);
+                closeWorkoutMenu();
+            }
+        });
     }
-}
-
-// Подтверждение удаления всех данных
-function showClearAllConfirmation() {
-    if (confirmModal) confirmModal.classList.add('active');
-}
-
-function hideClearAllConfirmation() {
-    if (confirmModal) confirmModal.classList.remove('active');
-}
-
-function clearAllData() {
-    try {
-        localStorage.removeItem('moneyMuffinWallets');
-        localStorage.removeItem('moneyMuffinPreviousBalances');
-        localStorage.removeItem('moneyMuffinBalanceChanges');
-        localStorage.removeItem('moneyMuffinShowChanges');
-        localStorage.removeItem('moneyMuffinSort');
-        localStorage.removeItem('moneyMuffinSortDirection');
-        localStorage.removeItem('moneyMuffinSelectedCurrency');
-        
-        wallets = [...initialWallets];
-        initializePreviousBalances();
-        currentSort = 'amount';
-        sortDirection = 'desc';
-        selectedCurrency = 'RUB';
-        
-        updateCurrencyDisplay();
-        saveWallets();
-        renderWallets();
-        updateTotalBalance();
-        updateSortButtons();
-        hideClearAllConfirmation();
-        
-        alert('Все данные были успешно сброшены к начальному состоянию!');
-        
-    } catch (error) {
-        console.error('Ошибка при удалении данных:', error);
-        alert('Произошла ошибка при удалении данных. Попробуйте еще раз.');
+    
+    if (deleteBtn) {
+        deleteBtn.addEventListener('click', () => {
+            if (editingWorkoutIndex !== null && confirm('Удалить тренировку?')) {
+                workouts.splice(editingWorkoutIndex, 1);
+                saveWorkouts();
+                closeWorkoutMenu();
+            }
+        });
     }
+    
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.workout-menu-btn') && !e.target.closest('#workout-menu')) {
+            closeWorkoutMenu();
+        }
+    });
 }
 
-// Форматирование суммы общего баланса
-function formatTotalBalance(amount) {
-    const hasDecimals = amount % 1 !== 0;
-    const formatter = new Intl.NumberFormat('ru-RU', {
-        minimumFractionDigits: hasDecimals ? 2 : 0,
-        maximumFractionDigits: hasDecimals ? 2 : 0
+function showWorkoutMenu(button, index) {
+    const menu = document.getElementById('workout-menu');
+    if (!menu) return;
+    
+    editingWorkoutIndex = index;
+    const rect = button.getBoundingClientRect();
+    
+    menu.style.display = 'block';
+    menu.style.position = 'fixed';
+    menu.style.top = rect.bottom + 5 + 'px';
+    menu.style.right = (window.innerWidth - rect.right) + 'px';
+}
+
+function closeWorkoutMenu() {
+    const menu = document.getElementById('workout-menu');
+    if (menu) {
+        menu.style.display = 'none';
+    }
+    editingWorkoutIndex = null;
+}
+
+function copyWorkout(index) {
+    const original = workouts[index];
+    const copy = {
+        ...original,
+        id: Date.now(),
+        name: original.name + ' (копия)'
+    };
+    workouts.splice(index + 1, 0, copy);
+    saveWorkouts();
+}
+
+function openEditModal(index) {
+    const workout = workouts[index];
+    if (!workout) return;
+    
+    const modal = document.getElementById('workout-modal');
+    const modalTitle = document.getElementById('modal-title');
+    const nameInput = document.getElementById('workout-name');
+    const daySelect = document.getElementById('workout-day');
+    const confirmBtn = document.getElementById('confirm-workout-btn');
+    
+    if (modalTitle) modalTitle.textContent = 'Редактировать тренировку';
+    if (nameInput) nameInput.value = workout.name;
+    if (daySelect) daySelect.value = workout.day;
+    
+    const oldConfirmHandler = confirmBtn.onclick;
+    
+    confirmBtn.onclick = () => {
+        const newName = nameInput ? nameInput.value.trim() : '';
+        const newDay = daySelect ? daySelect.value : 'any';
+        
+        if (newName) {
+            workouts[index].name = newName;
+            workouts[index].day = newDay;
+            saveWorkouts();
+            if (modal) modal.style.display = 'none';
+            confirmBtn.onclick = oldConfirmHandler;
+        } else {
+            alert('Введите название тренировки');
+        }
+    };
+    
+    if (modal) modal.style.display = 'flex';
+}
+
+function addWorkout(name, day) {
+    if (!name || name.trim() === '') {
+        alert('Введите название тренировки');
+        return false;
+    }
+    
+    workouts.push({
+        id: Date.now(),
+        name: name.trim(),
+        day: day,
+        createdAt: new Date().toISOString(),
+        exercises: []
     });
     
-    const formatted = formatter.format(Math.abs(amount));
-    return `${amount < 0 ? '-' : ''}${formatted}`;
+    saveWorkouts();
+    return true;
 }
 
-// Форматирование суммы с валютой
-function formatAmount(amount, currency) {
-    const hasDecimals = amount % 1 !== 0;
-    const decimalPlaces = currency === 'JPY' ? 0 : (hasDecimals ? 2 : 0);
+// ==================== ФУНКЦИИ ЗАСТАВКИ ====================
+
+function setupSplashScreen() {
+    const splash = document.getElementById("splash-screen");
+    const pageCalendar = document.getElementById("page-calendar");
     
-    const formatter = new Intl.NumberFormat('ru-RU', {
-        minimumFractionDigits: decimalPlaces,
-        maximumFractionDigits: decimalPlaces
+    if (!splash || !pageCalendar) return;
+    
+    splashTimeout = setTimeout(() => {
+        hideSplashScreen();
+    }, 5000);
+    
+    splash.addEventListener('click', () => {
+        hideSplashScreen();
     });
-    
-    const formatted = formatter.format(Math.abs(amount));
-    const symbol = currencySymbols[currency] || currency;
-    
-    return `${amount < 0 ? '-' : ''}${formatted} ${symbol}`;
 }
 
-// Форматирование даты
-function formatDate(dateString) {
-    try {
-        const date = new Date(dateString);
-        if (isNaN(date.getTime())) return dateString;
-        return date.toLocaleDateString('ru-RU');
-    } catch (error) {
-        return dateString;
+function hideSplashScreen() {
+    if (isAppLoaded) return;
+    isAppLoaded = true;
+    
+    if (splashTimeout) {
+        clearTimeout(splashTimeout);
+        splashTimeout = null;
+    }
+    
+    const splash = document.getElementById("splash-screen");
+    const pageCalendar = document.getElementById("page-calendar");
+    
+    if (splash && pageCalendar) {
+        splash.style.opacity = "0";
+        setTimeout(() => {
+            splash.style.display = "none";
+            pageCalendar.style.display = "block";
+            
+            setTimeout(() => {
+                setInitialPositionToCurrentMonth();
+                isFirstLoad = false;
+            }, 50);
+        }, 300);
     }
 }
+
+// ==================== ФУНКЦИИ НАВИГАЦИИ ====================
+
+function setupNavigation() {
+    // Назад из списка тренировок в календарь
+    const backBtn = document.getElementById('back-to-calendar-btn');
+    if (backBtn) {
+        backBtn.addEventListener('click', () => {
+            showPage('calendar');
+        });
+    }
+    
+    // Назад из деталей тренировки в список тренировок
+    const backToWorkoutListBtn = document.getElementById('back-to-workout-list-btn');
+    if (backToWorkoutListBtn) {
+        backToWorkoutListBtn.addEventListener('click', () => {
+            showPage('workout');
+        });
+    }
+    
+    // Кнопка "Выбери упражнение" (пока без функционала)
+    const addExerciseBtn = document.getElementById('add-exercise-btn');
+    if (addExerciseBtn) {
+        addExerciseBtn.addEventListener('click', () => {
+            alert('Функционал добавления упражнений в разработке');
+        });
+    }
+    
+    // Назад со страницы упражнений на главный экран
+    const backToMainFromExercises = document.getElementById('back-to-main-from-exercises');
+    if (backToMainFromExercises) {
+        backToMainFromExercises.addEventListener('click', () => {
+            showPage('calendar');
+        });
+    }
+    
+    // Назад со страницы Трицепс на страницу упражнений
+    const backToExercisesFromTriceps = document.getElementById('back-to-exercises-from-triceps');
+    if (backToExercisesFromTriceps) {
+        backToExercisesFromTriceps.addEventListener('click', () => {
+            showPage('exercises');
+        });
+    }
+    
+    // Обработка нажатий на категории упражнений
+    const exerciseCategories = document.querySelectorAll('.exercise-category');
+    exerciseCategories.forEach(category => {
+        category.addEventListener('click', () => {
+            const categoryName = category.querySelector('.category-name')?.textContent || '';
+            const categoryData = category.getAttribute('data-category');
+            
+            if (categoryData === 'triceps') {
+                showPage('triceps');
+            } else {
+                alert(`Упражнения для ${categoryName} в разработке`);
+            }
+        });
+    });
+    
+    // Кнопки Трицепс (пока без функционала)
+    const addTricepsBtn = document.getElementById('add-triceps-exercise-btn');
+    if (addTricepsBtn) {
+        addTricepsBtn.addEventListener('click', () => {
+            alert('Функционал добавления упражнений для трицепса в разработке');
+        });
+    }
+    
+    const sortTricepsBtn = document.getElementById('sort-triceps-btn');
+    if (sortTricepsBtn) {
+        sortTricepsBtn.addEventListener('click', () => {
+            alert('Функционал сортировки в разработке');
+        });
+    }
+    
+    // Обработка кнопки "Назад" на телефоне (Android)
+    document.addEventListener('backbutton', (e) => {
+        if (currentPage === 'workout-detail') {
+            e.preventDefault();
+            showPage('workout');
+        } else if (currentPage === 'workout') {
+            e.preventDefault();
+            showPage('calendar');
+        } else if (currentPage === 'exercises') {
+            e.preventDefault();
+            showPage('calendar');
+        } else if (currentPage === 'triceps') {
+            e.preventDefault();
+            showPage('exercises');
+        }
+    }, false);
+}
+
+function setupBottomNav() {
+    const navTraining = document.getElementById('nav-training');
+    const navExercises = document.getElementById('nav-exercises');
+    const navProgress = document.getElementById('nav-progress');
+    
+    if (navTraining) {
+        navTraining.addEventListener('click', () => {
+            showPage('workout');
+            updateActiveNav('nav-training');
+        });
+    }
+    
+    if (navExercises) {
+        navExercises.addEventListener('click', () => {
+            showPage('exercises');
+            updateActiveNav('nav-exercises');
+        });
+    }
+    
+    if (navProgress) {
+        navProgress.addEventListener('click', () => {
+            alert('Страница прогресса в разработке');
+            updateActiveNav('nav-progress');
+        });
+    }
+    
+    updateActiveNav('nav-training');
+}
+
+function updateActiveNav(activeId) {
+    const navBtns = ['nav-training', 'nav-exercises', 'nav-progress'];
+    
+    navBtns.forEach(id => {
+        const btn = document.getElementById(id);
+        if (btn) {
+            if (id === activeId) {
+                btn.classList.add('active');
+            } else {
+                btn.classList.remove('active');
+            }
+        }
+    });
+}
+
+function showPage(pageName) {
+    const pageCalendar = document.getElementById('page-calendar');
+    const pageWorkout = document.getElementById('page-workout');
+    const pageWorkoutDetail = document.getElementById('page-workout-detail');
+    const pageExercises = document.getElementById('page-exercises');
+    const pageTriceps = document.getElementById('page-triceps');
+    
+    if (pageName === 'calendar') {
+        if (pageCalendar) pageCalendar.style.display = 'block';
+        if (pageWorkout) pageWorkout.style.display = 'none';
+        if (pageWorkoutDetail) pageWorkoutDetail.style.display = 'none';
+        if (pageExercises) pageExercises.style.display = 'none';
+        if (pageTriceps) pageTriceps.style.display = 'none';
+        currentPage = 'calendar';
+        updateActiveNav('nav-training');
+    } else if (pageName === 'workout') {
+        if (pageCalendar) pageCalendar.style.display = 'none';
+        if (pageWorkout) pageWorkout.style.display = 'block';
+        if (pageWorkoutDetail) pageWorkoutDetail.style.display = 'none';
+        if (pageExercises) pageExercises.style.display = 'none';
+        if (pageTriceps) pageTriceps.style.display = 'none';
+        currentPage = 'workout';
+        updateActiveNav('nav-training');
+        renderWorkoutsList();
+    } else if (pageName === 'workout-detail') {
+        if (pageCalendar) pageCalendar.style.display = 'none';
+        if (pageWorkout) pageWorkout.style.display = 'none';
+        if (pageWorkoutDetail) pageWorkoutDetail.style.display = 'block';
+        if (pageExercises) pageExercises.style.display = 'none';
+        if (pageTriceps) pageTriceps.style.display = 'none';
+        currentPage = 'workout-detail';
+    } else if (pageName === 'exercises') {
+        if (pageCalendar) pageCalendar.style.display = 'none';
+        if (pageWorkout) pageWorkout.style.display = 'none';
+        if (pageWorkoutDetail) pageWorkoutDetail.style.display = 'none';
+        if (pageExercises) pageExercises.style.display = 'block';
+        if (pageTriceps) pageTriceps.style.display = 'none';
+        currentPage = 'exercises';
+        updateActiveNav('nav-exercises');
+    } else if (pageName === 'triceps') {
+        if (pageCalendar) pageCalendar.style.display = 'none';
+        if (pageWorkout) pageWorkout.style.display = 'none';
+        if (pageWorkoutDetail) pageWorkoutDetail.style.display = 'none';
+        if (pageExercises) pageExercises.style.display = 'none';
+        if (pageTriceps) pageTriceps.style.display = 'block';
+        currentPage = 'triceps';
+    }
+}
+
+function openWorkoutPage(date) {
+    selectedDate = date;
+    showPage('workout');
+}
+
+// ==================== МОДАЛЬНОЕ ОКНО ====================
+
+function setupModal() {
+    const addBtn = document.getElementById('add-workout-btn');
+    const modal = document.getElementById('workout-modal');
+    const cancelBtn = document.getElementById('cancel-workout-btn');
+    const confirmBtn = document.getElementById('confirm-workout-btn');
+    const workoutName = document.getElementById('workout-name');
+    const modalTitle = document.getElementById('modal-title');
+    
+    if (addBtn) {
+        addBtn.addEventListener('click', () => {
+            if (modal) {
+                if (modalTitle) modalTitle.textContent = 'Создать тренировку';
+                if (workoutName) workoutName.value = '';
+                const daySelect = document.getElementById('workout-day');
+                if (daySelect) daySelect.value = 'any';
+                
+                confirmBtn.onclick = () => {
+                    const name = workoutName ? workoutName.value.trim() : '';
+                    const daySelect = document.getElementById('workout-day');
+                    const day = daySelect ? daySelect.value : 'any';
+                    
+                    if (addWorkout(name, day)) {
+                        if (modal) modal.style.display = 'none';
+                        renderWorkoutsList();
+                    }
+                };
+                
+                modal.style.display = 'flex';
+            }
+        });
+    }
+    
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', () => {
+            if (modal) modal.style.display = 'none';
+        });
+    }
+    
+    if (modal) {
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.style.display = 'none';
+            }
+        });
+    }
+}
+
+// ==================== ФУНКЦИИ КАЛЕНДАРЯ ====================
+
+function initCalendar() {
+    const today = new Date();
+    currentYear = today.getFullYear();
+    currentMonthIndex = today.getMonth();
+    
+    generateYearMonths(currentYear);
+    
+    const resetBtn = document.getElementById('reset-calendar-btn');
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            scrollToCurrentMonth();
+        });
+    }
+}
+
+function setInitialPositionToCurrentMonth() {
+    const scrollContainer = document.getElementById('calendar-scroll');
+    if (!scrollContainer) return;
+    
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
+    
+    const monthElement = document.getElementById(`month-${currentYear}-${currentMonth}`);
+    if (monthElement) {
+        const monthElementTop = monthElement.offsetTop;
+        const scrollContainerHeight = scrollContainer.clientHeight;
+        const monthElementHeight = monthElement.offsetHeight;
+        
+        const scrollTo = monthElementTop - (scrollContainerHeight / 2) + (monthElementHeight / 2);
+        
+        scrollContainer.scrollTop = Math.max(0, scrollTo);
+        
+        updateMonthHeader();
+    }
+}
+
+function getWeeksInMonth(year, month) {
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    
+    let startDay = firstDay.getDay();
+    startDay = startDay === 0 ? 6 : startDay - 1;
+    
+    const daysInMonth = lastDay.getDate();
+    const totalDays = startDay + daysInMonth;
+    const weeks = Math.ceil(totalDays / 7);
+    
+    return weeks;
+}
+
+function calculateWindowHeightForMonth(year, month) {
+    const weeks = getWeeksInMonth(year, month);
+    
+    const weekdaysHeight = 45;
+    const dayCellHeight = 48;
+    const padding = 16;
+    
+    const height = weekdaysHeight + (weeks * dayCellHeight) + padding;
+    
+    return height;
+}
+
+function adjustWindowHeight() {
+    const scrollContainer = document.getElementById('calendar-scroll');
+    const calendarWindow = document.getElementById('calendar-window');
+    
+    if (!scrollContainer || !calendarWindow) return;
+    
+    const scrollTop = scrollContainer.scrollTop;
+    let centerMonth = null;
+    
+    for (let i = 0; i < monthsData.length; i++) {
+        const monthElement = monthsData[i].element;
+        const offsetTop = monthElement.offsetTop;
+        const offsetBottom = offsetTop + monthElement.offsetHeight;
+        const viewportCenter = scrollTop + (scrollContainer.clientHeight / 2);
+        
+        if (viewportCenter >= offsetTop && viewportCenter <= offsetBottom) {
+            centerMonth = monthsData[i];
+            break;
+        }
+    }
+    
+    if (centerMonth) {
+        const height = calculateWindowHeightForMonth(centerMonth.year, centerMonth.month);
+        calendarWindow.style.height = height + 'px';
+    }
+}
+
+function generateYearMonths(year) {
+    const monthsContainer = document.getElementById('calendar-months');
+    if (!monthsContainer) return;
+    
+    monthsContainer.innerHTML = '';
+    monthsData = [];
+    
+    const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+    
+    for (let month = 0; month < 12; month++) {
+        const monthContainer = document.createElement('div');
+        monthContainer.className = 'month-container';
+        monthContainer.id = `month-${year}-${month}`;
+        
+        const calendarDiv = document.createElement('div');
+        calendarDiv.className = 'calendar';
+        
+        const weekdaysDiv = document.createElement('div');
+        weekdaysDiv.className = 'calendar-weekdays';
+        const weekdays = ['ПН', 'ВТ', 'СР', 'ЧТ', 'ПТ', 'СБ', 'ВС'];
+        weekdays.forEach(day => {
+            const dayDiv = document.createElement('div');
+            dayDiv.textContent = day;
+            weekdaysDiv.appendChild(dayDiv);
+        });
+        
+        const daysDiv = document.createElement('div');
+        daysDiv.className = 'calendar-days';
+        
+        generateMonthDays(year, month, daysDiv);
+        
+        calendarDiv.appendChild(weekdaysDiv);
+        calendarDiv.appendChild(daysDiv);
+        monthContainer.appendChild(calendarDiv);
+        monthsContainer.appendChild(monthContainer);
+        
+        monthsData.push({
+            year: year,
+            month: month,
+            element: monthContainer,
+            weeksCount: getWeeksInMonth(year, month)
+        });
+    }
+    
+    updateMonthHeader();
+    
+    setTimeout(() => {
+        adjustWindowHeight();
+    }, 50);
+}
+
+function generateMonthDays(year, month, container) {
+    const firstDayOfMonth = new Date(year, month, 1);
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const today = new Date();
+    
+    let startDay = firstDayOfMonth.getDay();
+    startDay = startDay === 0 ? 6 : startDay - 1;
+    
+    container.innerHTML = '';
+    
+    for (let i = 0; i < startDay; i++) {
+        const emptyDay = document.createElement('div');
+        emptyDay.className = 'calendar-day empty';
+        emptyDay.textContent = '';
+        container.appendChild(emptyDay);
+    }
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+        const dayElement = document.createElement('div');
+        dayElement.className = 'calendar-day';
+        dayElement.textContent = day;
+        
+        const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+        
+        if (day === today.getDate() && 
+            month === today.getMonth() && 
+            year === today.getFullYear()) {
+            dayElement.classList.add('today');
+        }
+        
+        dayElement.addEventListener('click', (e) => {
+            e.stopPropagation();
+            openWorkoutPage(dateStr);
+        });
+        
+        container.appendChild(dayElement);
+    }
+}
+
+function updateMonthHeader() {
+    const scrollContainer = document.getElementById('calendar-scroll');
+    if (!scrollContainer) return;
+    
+    const monthHeader = document.getElementById('current-month');
+    if (!monthHeader) return;
+    
+    const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь', 'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+    
+    const scrollTop = scrollContainer.scrollTop;
+    let currentMonth = null;
+    let closestDistance = Infinity;
+    
+    for (let i = 0; i < monthsData.length; i++) {
+        const monthElement = monthsData[i].element;
+        const offsetTop = monthElement.offsetTop;
+        const offsetBottom = offsetTop + monthElement.offsetHeight;
+        const viewportCenter = scrollTop + (scrollContainer.clientHeight / 2);
+        
+        if (viewportCenter >= offsetTop && viewportCenter <= offsetBottom) {
+            currentMonth = monthsData[i];
+            break;
+        }
+        
+        const distanceToTop = Math.abs(viewportCenter - offsetTop);
+        const distanceToBottom = Math.abs(viewportCenter - offsetBottom);
+        const minDistance = Math.min(distanceToTop, distanceToBottom);
+        
+        if (minDistance < closestDistance) {
+            closestDistance = minDistance;
+            currentMonth = monthsData[i];
+        }
+    }
+    
+    if (currentMonth) {
+        monthHeader.textContent = `${monthNames[currentMonth.month]} ${currentMonth.year}`;
+        adjustWindowHeight();
+    }
+}
+
+function scrollToCurrentMonth() {
+    const scrollContainer = document.getElementById('calendar-scroll');
+    if (!scrollContainer) return;
+    
+    const today = new Date();
+    const currentYear = today.getFullYear();
+    const currentMonth = today.getMonth();
+    
+    const monthElement = document.getElementById(`month-${currentYear}-${currentMonth}`);
+    if (monthElement) {
+        const monthElementTop = monthElement.offsetTop;
+        const scrollContainerHeight = scrollContainer.clientHeight;
+        const monthElementHeight = monthElement.offsetHeight;
+        
+        const scrollTo = monthElementTop - (scrollContainerHeight / 2) + (monthElementHeight / 2);
+        
+        scrollContainer.scrollTo({
+            top: Math.max(0, scrollTo),
+            behavior: 'smooth'
+        });
+        
+        setTimeout(() => {
+            updateMonthHeader();
+        }, 300);
+    }
+}
+
+function escapeHtml(str) {
+    if (!str) return '';
+    return str.replace(/[&<>]/g, function(m) {
+        if (m === '&') return '&amp;';
+        if (m === '<') return '&lt;';
+        if (m === '>') return '&gt;';
+        return m;
+    });
+}
+
+// Добавляем обработчик скролла
+setTimeout(() => {
+    const scrollContainer = document.getElementById('calendar-scroll');
+    if (scrollContainer) {
+        scrollContainer.addEventListener('scroll', () => {
+            updateMonthHeader();
+        });
+    }
+}, 200);
